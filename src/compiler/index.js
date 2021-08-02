@@ -1,14 +1,14 @@
-import { generate } from './generate';
-import {parserHTML} from './parser';
+import { generate } from './codegen/index';
+import {parse} from './parser/index';
 
 export function compileToFunction(template) {
-    let root = parserHTML(template)
+    let root = parse(template)
     
     // 生成代码 
     let code = generate(root)
-
+    console.log('compileToFunction----code---', code)
     let render = new Function(`with(this){return ${code}}`); // code 中会用到数据 数据在vm上
-
+    console.log('compiler----render----', render)
     return render;
     // render(){
     //     return

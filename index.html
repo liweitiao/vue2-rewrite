@@ -16,8 +16,7 @@
 
 <body>
     <!-- <div id="app">{{fullName}}</div> -->
-    <div id="app"> <button>{{arr}} ---</button>
-      <my-button></my-button>
+    <div id="app"> <button a=1>{{arr}} ---</button>
     </div>
     
     <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
@@ -29,17 +28,17 @@
     <!-- <script src="./Vue.js"></script> -->
     <script>
         
-        Vue.component("my-button", { // Vue.options.components = {"my-button":fn}
-            template: '<button>hello</button>',
-            methods: {
-              fn2() {
-                console.log('fn2---')
-                console.log(this)
+        // Vue.component("my-button", { // Vue.options.components = {"my-button":fn}
+        //     template: '<button b=2>hello</button>',
+        //     methods: {
+        //       fn2() {
+        //         console.log('fn2---')
+        //         console.log(this)
 
-                this.$emit('test')
-              }
-            }
-        });
+        //         this.$emit('test')
+        //       }
+        //     }
+        // });
 
         
         const vm = new Vue({ // .__proto__
@@ -51,20 +50,20 @@
               aaa: 777
             },
             beforeCreate() {
-                console.log('beforeCreate', 'parent')
+                // console.log('beforeCreate', 'parent')
             },
             mounted() {
-                console.log('mounted', 'parent')
+                // console.log('mounted', 'parent')
             },
             components: {
                 "my-button": {
                     template: '<button>world---{{aaa}}</button>',
                     inject: ['aaa'],
                     beforeCreate() {
-                        console.log('beforeCreate', 'child');
+                        // console.log('beforeCreate', 'child');
                     },
                     mounted() {
-                        console.log('mounted', 'child')
+                        // console.log('mounted', 'child')
                     },
                     methods: {
                       fn4() {

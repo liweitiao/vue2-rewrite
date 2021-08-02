@@ -63,6 +63,6 @@ export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world')
     }${
         children? `,${children}`:''
     })`;
-
+    // console.log('generate---code---', code)
     return code;
 }

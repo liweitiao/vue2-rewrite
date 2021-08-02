@@ -1,19 +1,9 @@
-import { createElement, createTextElement } from "./vdom/index"
+
+import { installRenderHelpers } from './render-helpers'
 
 export function renderMixin(Vue) {
   // console.log('renderMixin---')
-  Vue.prototype._c = function() {
-    return createElement(this, ...arguments)
-  }
-
-  Vue.prototype._v = function (text) {
-    return createTextElement(this, text)
-  }
-
-  Vue.prototype._s = function(val) {
-    if (typeof val === 'object') return JSON.stringify(val)
-    return val
-  }
+ installRenderHelpers(Vue.prototype)
 
   Vue.prototype._render = function () {
     const vm = this

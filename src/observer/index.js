@@ -48,7 +48,7 @@ export function defineReactive(data, key, value) {
     get() {
       // console.log('get--')
       if (Dep.target) {
-        console.log('observer---key---dep2---', key, dep)
+        // console.log('observer---key---dep2---', key, dep)
         dep.depend()
         if (childOb) {
           childOb.dep.depend()

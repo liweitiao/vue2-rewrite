@@ -11,7 +11,7 @@ export function createElement(vm, tag, data = {}, ...children) {
 }
 
 function createComponent(vm, tag, data, key, children, Ctor) {
-  // console.log('vdom---createComponent---Ctor---', Ctor)
+  console.log('vdom---createComponent---Ctor---', Ctor)
   if (isObject(Ctor)) {
     Ctor = vm.$options._base.extend(Ctor)
   }
@@ -34,6 +34,7 @@ export function createTextElement(vm, text) {
 }
 
 function vnode(vm, tag, data, key, children, text, componentOptions) {
+  console.log('vnode----arguments---', arguments)
   return {
       vm,
       tag,

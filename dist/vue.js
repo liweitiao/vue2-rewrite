@@ -262,7 +262,7 @@
       get() {
         // console.log('get--')
         if (Dep.target) {
-          console.log('observer---key---dep2---', key, dep);
+          // console.log('observer---key---dep2---', key, dep)
           dep.depend();
 
           if (childOb) {
@@ -646,33 +646,218 @@
 
   function patch(oldVnode, vnode) {
     if (!oldVnode) {
-      return createElm(vnode);
+      return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
 
     if (oldVnode.nodeType == 1) {
-      const parentElm = oldVnode.parentNode;
-      let elm = createElm(vnode); // console.log('patch----elm---', elm)
+      // 用vnode  来生成真实dom 替换原本的dom元素
+      const parentElm = oldVnode.parentNode; // 找到他的父亲
+
+      let elm = createElm(vnode); //根据虚拟节点 创建元素
+      // 在第一次渲染后 是删除掉节点，下次在使用无法获取
 
       parentElm.insertBefore(elm, oldVnode.nextSibling);
       parentElm.removeChild(oldVnode);
       return elm;
+    } else {
+      // 如果标签名称不一样 直接删掉老的换成新的即可
+      if (oldVnode.tag !== vnode.tag) {
+        // 可以通过vnode.el属性。获取现在真实的dom元素
+        return oldVnode.el.parentNode.replaceChild(createElm(vnode), oldVnode.el);
+      } // 如果标签一样比较属性 , 传入新的新的虚拟节点 ，和老的属性 。用新的属性 更新老的
+
+
+      let el = vnode.el = oldVnode.el; // 表示当前新节点 复用老节点
+      // 如果两个虚拟节点是文本节点  比较文本内容 ...
+
+      if (vnode.tag == undefined) {
+        // 新老都是文本
+        if (oldVnode.text !== vnode.text) {
+          el.textContent = vnode.text;
+        }
+
+        return;
+      }
+
+      patchProps(vnode, oldVnode.data); // 属性可能有删除的情况
+      // 一方有儿子 ， 一方没儿子
+
+      let oldChildren = oldVnode.children || [];
+      let newChildren = vnode.children || [];
+
+      if (oldChildren.length > 0 && newChildren.length > 0) {
+        // 双方都有儿子
+        //  vue用了双指针的方式 来比对 
+        patchChildren(el, oldChildren, newChildren);
+      } else if (newChildren.length > 0) {
+        // 老的没儿子 但是新的有儿子
+        for (let i = 0; i < newChildren.length; i++) {
+          let child = createElm(newChildren[i]);
+          el.appendChild(child); // 循环创建新节点
+        }
+      } else if (oldChildren.length > 0) {
+        // 老的有儿子 新的没儿子
+        el.innerHTML = ``; // 直接删除老节点
+      } // vue的特点是每个组件都有一个watcher，当前组件中数据变化 只需要更新当前组件
+
+
+      return el;
+    }
+  }
+
+  function isSameVnode(oldVnode, newVnode) {
+    return oldVnode.tag == newVnode.tag && oldVnode.key == newVnode.key;
+  } // dom的生成 ast => render方法 => 虚拟节点 => 真实dom
+  // 更新时需要重新创建ast语法树吗？
+  // 如果动态的添加了节点 （绕过vue添加的vue监控不到的） 难道不需要重新ast吗？
+  // 后续数据变了，只会操作自己管理的dom元素
+  // 如果直接操作dom 和 vue无关，不需要重新创建ast语法树
+
+
+  function patchChildren(el, oldChildren, newChildren) {
+    let oldStartIndex = 0;
+    let oldStartVnode = oldChildren[0];
+    let oldEndIndex = oldChildren.length - 1;
+    let oldEndVnode = oldChildren[oldEndIndex];
+    let newStartIndex = 0;
+    let newStartVnode = newChildren[0];
+    let newEndIndex = newChildren.length - 1;
+    let newEndVnode = newChildren[newEndIndex];
+
+    const makeIndexByKey = children => {
+      return children.reduce((memo, current, index) => {
+        if (current.key) {
+          memo[current.key] = index;
+        }
+
+        return memo;
+      }, {});
+    };
+
+    const keysMap = makeIndexByKey(oldChildren);
+
+    while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+      // 头头比较 尾尾比较 头尾比较 尾头比较
+      // 优化了 向后添加， 向前添加，尾巴移动到头部，头部移动到尾部 ，反转
+      if (!oldStartVnode) {
+        // 已经被移动走了
+        oldStartVnode = oldChildren[++oldStartIndex];
+      } else if (!oldEndVnode) {
+        oldEndVnode = oldChildren[--oldEndIndex];
+      } // 同时循环新的节点和 老的节点，有一方循环完毕就结束了
+
+
+      if (isSameVnode(oldStartVnode, newStartVnode)) {
+        // 头头比较，发现标签一致，
+        patch(oldStartVnode, newStartVnode);
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } else if (isSameVnode(oldEndVnode, newEndVnode)) {
+        // 从尾部开始比较
+        patch(oldEndVnode, newEndVnode);
+        oldEndVnode = oldChildren[--oldEndIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } // 头尾比较  =》 reverse
+      else if (isSameVnode(oldStartVnode, newEndVnode)) {
+        patch(oldStartVnode, newEndVnode);
+        el.insertBefore(oldStartVnode.el, oldEndVnode.el.nextSibling); // 移动老的元素，老的元素就被移动走了，不用删除
+
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } else if (isSameVnode(oldEndVnode, newStartVnode)) {
+        // 尾头比较
+        patch(oldEndVnode, newStartVnode);
+        el.insertBefore(oldEndVnode.el, oldStartVnode.el);
+        oldEndVnode = oldChildren[--oldEndIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } else {
+        // 乱序比对   核心diff
+        // 1.需要根据key和 对应的索引将老的内容生成程映射表
+        let moveIndex = keysMap[newStartVnode.key]; // 用新的去老的中查找
+
+        if (moveIndex == undefined) {
+          // 如果不能复用直接创建新的插入到老的节点开头处
+          el.insertBefore(createElm(newStartVnode), oldStartVnode.el);
+        } else {
+          let moveNode = oldChildren[moveIndex];
+          oldChildren[moveIndex] = null; // 此节点已经被移动走了
+
+          el.insertBefore(moveNode.el, oldStartVnode.el);
+          patch(moveNode, newStartVnode); // 比较两个节点的属性
+        }
+
+        newStartVnode = newChildren[++newStartIndex];
+      }
+    } // 如果用户追加了一个怎么办？  
+    // 这里是没有比对完的
+
+
+    if (newStartIndex <= newEndIndex) {
+      for (let i = newStartIndex; i <= newEndIndex; i++) {
+        // el.appendChild(createElm(newChildren[i]))  
+        // insertBefore方法 他可以appendChild功能 insertBefore(节点,null)  dom api
+        //  看一下为指针的下一个元素是否存在
+        let anchor = newChildren[newEndIndex + 1] == null ? null : newChildren[newEndIndex + 1].el;
+        el.insertBefore(createElm(newChildren[i]), anchor);
+      }
+    }
+
+    if (oldStartIndex <= oldEndIndex) {
+      for (let i = oldStartIndex; i <= oldEndIndex; i++) {
+        //  如果老的多 将老节点删除 ， 但是可能里面有null 的情况
+        if (oldChildren[i] !== null) el.removeChild(oldChildren[i].el);
+      }
+    }
+  } // 创建真实节点的
+
+
+  function patchProps(vnode, oldProps = {}) {
+    // 初次渲染时可以调用此方法，后续更新也可以调用此方法
+    let newProps = vnode.data || {};
+    let el = vnode.el; // 如果老的属性有，新的没有直接删除
+
+    let newStyle = newProps.style || {};
+    let oldStyle = oldProps.style || {};
+
+    for (let key in oldStyle) {
+      if (!newStyle[key]) {
+        // 新的里面不存在这个样式
+        el.style[key] = '';
+      }
+    }
+
+    for (let key in oldProps) {
+      if (!newProps[key]) {
+        el.removeAttribute(key);
+      }
+    } // 直接用新的生成到元素上
+
+
+    for (let key in newProps) {
+      if (key === 'style') {
+        for (let styleName in newProps.style) {
+          el.style[styleName] = newProps.style[styleName];
+        }
+      } else {
+        el.setAttribute(key, newProps[key]);
+      }
     }
   }
 
   function createComponent$1(vnode) {
-    let i = vnode.data;
+    let i = vnode.data; //  vnode.data.hook.init
 
     if ((i = i.hook) && (i = i.init)) {
-      i(vnode);
+      i(vnode); // 调用init方法
     }
 
     if (vnode.componentInstance) {
+      // 有属性说明子组件new完毕了，并且组件对应的真实DOM挂载到了componentInstance.$el
       return true;
     }
   }
 
   function createElm(vnode) {
-    // console.log('patch----vnode---', vnode)
     let {
       tag,
       data,
@@ -682,12 +867,15 @@
     } = vnode;
 
     if (typeof tag === 'string') {
+      // 元素
       if (createComponent$1(vnode)) {
+        // 返回组件对应的真实节点
         return vnode.componentInstance.$el;
-      } // debugger
+      }
 
+      vnode.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
 
-      vnode.el = document.createElement(tag);
+      patchProps(vnode);
       children.forEach(child => {
         vnode.el.appendChild(createElm(child));
       });
@@ -733,8 +921,9 @@
   }
   function mountComponent(vm, el) {
     let updateComponent = () => {
-      let vnode = vm._render(); // console.log('lifecycle----mountComponent----vnode----', vnode)
+      let vnode = vm._render();
 
+      console.log('lifecycle----mountComponent----vnode----', vnode);
 
       vm._update(vnode);
     };
@@ -832,7 +1021,8 @@
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     let children = genChildren(el);
-    let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`;
+    let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`; // console.log('generate---code---', code)
+
     return code;
   }
 
@@ -849,60 +1039,7 @@
 
   const startTagClose = /^\s*(\/?)>/; //     />   <div/>
 
-  function parserHTML(html) {
-    // ast (语法层面的描述 js css html) vdom （dom节点）
-    // html字符串解析成 对应的脚本来触发 tokens  <div id="app"> {{name}}</div>
-    // 将解析后的结果 组装成一个树结构  栈
-    function createAstElement(tagName, attrs) {
-      return {
-        tag: tagName,
-        type: 1,
-        children: [],
-        parent: null,
-        attrs
-      };
-    }
-
-    let root = null;
-    let stack = [];
-
-    function start(tagName, attributes) {
-      let parent = stack[stack.length - 1];
-      let element = createAstElement(tagName, attributes);
-
-      if (!root) {
-        root = element;
-      }
-
-      if (parent) {
-        element.parent = parent; // 当放入栈中时 继续父亲是谁
-
-        parent.children.push(element);
-      }
-
-      stack.push(element);
-    }
-
-    function end(tagName) {
-      let last = stack.pop();
-
-      if (last.tag !== tagName) {
-        throw new Error('标签有误');
-      }
-    }
-
-    function chars(text) {
-      text = text.replace(/\s/g, "");
-      let parent = stack[stack.length - 1];
-
-      if (text) {
-        parent.children.push({
-          type: 3,
-          text
-        });
-      }
-    }
-
+  function parseHTML(html, options) {
     function advance(len) {
       html = html.substring(len);
     }
@@ -939,21 +1076,20 @@
     }
 
     while (html) {
-      // 看要解析的内容是否存在，如果存在就不停的解析
-      let textEnd = html.indexOf('<'); // 当前解析的开头  
+      let textEnd = html.indexOf('<');
 
       if (textEnd == 0) {
-        const startTagMatch = parseStartTag(); // 解析开始标签
+        const startTagMatch = parseStartTag(); // debugger
 
         if (startTagMatch) {
-          start(startTagMatch.tagName, startTagMatch.attrs);
+          options.start(startTagMatch.tagName, startTagMatch.attrs);
           continue;
         }
 
         const endTagMatch = html.match(endTag);
 
         if (endTagMatch) {
-          end(endTagMatch[1]);
+          options.end(endTagMatch[1]);
           advance(endTagMatch[0].length);
           continue;
         }
@@ -966,25 +1102,75 @@
       }
 
       if (text) {
-        chars(text);
+        options.chars(text);
         advance(text.length);
       }
     }
+  }
 
+  // // 看一下用户是否传入了 , 没传入可能传入的是 template, template如果也没有传递
+  function createAstElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: 1,
+      children: [],
+      parent: null,
+      attrs
+    };
+  }
+  function parse(template, options) {
+    let root;
+    const stack = [];
+    parseHTML(template, {
+      start(tagName, attributes) {
+        let parent = stack[stack.length - 1];
+        let element = createAstElement(tagName, attributes);
+
+        if (!root) {
+          root = element;
+        }
+
+        if (parent) {
+          element.parent = parent; // 当放入栈中时 继续父亲是谁
+
+          parent.children.push(element);
+        }
+
+        stack.push(element);
+      },
+
+      end(tagName) {
+        let last = stack.pop();
+
+        if (last.tag !== tagName) {
+          throw new Error('标签有误');
+        }
+      },
+
+      chars(text) {
+        text = text.replace(/\s/g, "");
+        let parent = stack[stack.length - 1];
+
+        if (text) {
+          parent.children.push({
+            type: 3,
+            text
+          });
+        }
+      }
+
+    });
     return root;
-  } // 看一下用户是否传入了 , 没传入可能传入的是 template, template如果也没有传递
-  // 将我们的html =》 词法解析  （开始标签 ， 结束标签，属性，文本）
-  // => ast语法树 用来描述html语法的 stack=[]
-  // codegen  <div>hello</div>  =>   _c('div',{},'hello')  => 让字符串执行
-  // 字符串如果转成代码 eval 好性能 会有作用域问题
-  // 模板引擎 new Function + with 来实现
+  }
 
   function compileToFunction(template) {
-    let root = parserHTML(template); // 生成代码 
+    let root = parse(template); // 生成代码 
 
     let code = generate(root);
+    console.log('compileToFunction----code---', code);
     let render = new Function(`with(this){return ${code}}`); // code 中会用到数据 数据在vm上
 
+    console.log('compiler----render----', render);
     return render; // render(){
     //     return
     // }
@@ -992,16 +1178,14 @@
   }
 
   function initProvide(vm) {
-    const provide = vm.$options.provide;
-    console.log('inject----provide--', provide);
+    const provide = vm.$options.provide; // console.log('inject----provide--', provide)
 
     if (provide) {
       vm._provided = typeof provide === 'function' ? provide.call(vm) : provide;
     }
   }
   function initInjections(vm) {
-    const result = resolveInject(vm.$options.inject, vm);
-    console.log('inject---initInjections---result---', result);
+    const result = resolveInject(vm.$options.inject, vm); // console.log('inject---initInjections---result---', result)
 
     if (result) {
       Object.keys(result).forEach(key => {
@@ -1014,8 +1198,7 @@
     if (inject) {
       const result = Object.create(null); // const keys = Object.keys(inject)
 
-      const keys = Reflect.ownKeys(inject);
-      console.log('inject----resolveInject----result---', keys);
+      const keys = Reflect.ownKeys(inject); // console.log('inject----resolveInject----result---', keys)
 
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
@@ -1033,8 +1216,7 @@
         }
 
         if (!source) {
-          console.log('inject---key---', inject, key);
-
+          // console.log('inject---key---', inject, key)
           if (key !== 'length' && 'default' in inject[key]) {
             const provideDefault = inject[key].default;
             result[key] = typeof provideDefault === 'function' ? provideDefault.call(vm) : provideDefault;
@@ -1103,7 +1285,8 @@
   }
 
   function createComponent(vm, tag, data, key, children, Ctor) {
-    // console.log('vdom---createComponent---Ctor---', Ctor)
+    console.log('vdom---createComponent---Ctor---', Ctor);
+
     if (isObject(Ctor)) {
       Ctor = vm.$options._base.extend(Ctor);
     }
@@ -1133,6 +1316,7 @@
   }
 
   function vnode(vm, tag, data, key, children, text, componentOptions) {
+    console.log('vnode----arguments---', arguments);
     return {
       vm,
       tag,
@@ -1145,20 +1329,24 @@
     };
   }
 
-  function renderMixin(Vue) {
-    // console.log('renderMixin---')
-    Vue.prototype._c = function () {
+  function installRenderHelpers(target) {
+    target._c = function () {
       return createElement(this, ...arguments);
     };
 
-    Vue.prototype._v = function (text) {
+    target._v = function (text) {
       return createTextElement(this, text);
     };
 
-    Vue.prototype._s = function (val) {
+    target._s = function (val) {
       if (typeof val === 'object') return JSON.stringify(val);
       return val;
     };
+  }
+
+  function renderMixin(Vue) {
+    // console.log('renderMixin---')
+    installRenderHelpers(Vue.prototype);
 
     Vue.prototype._render = function () {
       const vm = this;
