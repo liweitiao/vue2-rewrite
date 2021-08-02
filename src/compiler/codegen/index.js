@@ -58,6 +58,7 @@ function genChildren(el) {
 export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     let children = genChildren(el);
+    debugger
     let code = `_c('${el.tag}',${
         el.attrs.length? genProps(el.attrs): 'undefined'
     }${

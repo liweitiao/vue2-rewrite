@@ -9,6 +9,7 @@
 // // 模板引擎 new Function + with 来实现
 
 import { parseHTML } from './html-parser'
+import { addAttr } from '../helpers'
 
 export function createAstElement(tagName, attrs) {
     return {
@@ -22,7 +23,48 @@ export function createAstElement(tagName, attrs) {
 
 export function parse(template, options) {
     let root
+    let currentParent
     const stack = []
+
+    function closeElement(element) {
+        // processElement(element)
+        // debugger
+        element = processElement(element)
+        // processSlotContent(el)
+        // currentParent || currentParent.children.push(element)
+        element.parent = currentParent
+        // debugger
+        // return element
+    }
+
+
+
+    function processElement(element) {
+        processSlotContent(element)
+        // debugger
+        return element
+    }
+
+    function getBindingAttr(el, name) {
+        let slotTarget = el.attrs[0] && el.attrs[0]['value']
+        return slotTarget
+    }
+
+
+    function processSlotContent(el) {
+        // debugger
+        var slotTarget = getBindingAttr(el, 'slot')
+        if (slotTarget) {
+            el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget
+            el.attrsMap = el.attrsMap || {}
+            el.attrsMap['slot'] = slotTarget
+            el.slotTargetDynamic = !!(el.attrsMap[':slot'] || el.attrsMap['v-bind:slot'])
+            if (!el.slotScope) {
+                addAttr(el, 'slot', slotTarget, getBindingAttr(el, 'slot'))
+            }
+        }
+    }
+
     parseHTML(template, {
          start(tagName, attributes) {
             let parent = stack[stack.length - 1];
@@ -38,10 +80,15 @@ export function parse(template, options) {
         },
     
         end(tagName) {
-            let last = stack.pop();
-            if (last.tag !== tagName) {
+            const element = stack[stack.length - 1];
+            stack.length -= 1
+            currentParent = stack[stack.length - 1]
+            if (element.tag !== tagName) {
                 throw new Error('标签有误');
             }
+            // debugger
+            closeElement(element)
+            // debugger
         },
     
         chars(text) {

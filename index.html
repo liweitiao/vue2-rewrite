@@ -16,7 +16,11 @@
 
 <body>
     <!-- <div id="app">{{fullName}}</div> -->
-    <div id="app"> <button a=1>{{arr}} ---</button>
+    <div id="app">
+      <my>
+        <h1 slot="title">标题</h1>
+        <div slot="content">内容</div>
+      </my>
     </div>
     
     <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
@@ -28,78 +32,17 @@
     <!-- <script src="./Vue.js"></script> -->
     <script>
         
-        // Vue.component("my-button", { // Vue.options.components = {"my-button":fn}
-        //     template: '<button b=2>hello</button>',
-        //     methods: {
-        //       fn2() {
-        //         console.log('fn2---')
-        //         console.log(this)
+       Vue.component('my', {
+         template: `<div>
+          <slot name="content">123</slot>
+          <slot name="title">456</slot>
+          <slot name="content">123</slot>
+        `
+       })
 
-        //         this.$emit('test')
-        //       }
-        //     }
-        // });
-
-        
-        const vm = new Vue({ // .__proto__
-            el: '#app',
-            data:{
-                arr:[1, 2, 3]
-            },
-            provide: {
-              aaa: 777
-            },
-            beforeCreate() {
-                // console.log('beforeCreate', 'parent')
-            },
-            mounted() {
-                // console.log('mounted', 'parent')
-            },
-            components: {
-                "my-button": {
-                    template: '<button>world---{{aaa}}</button>',
-                    inject: ['aaa'],
-                    beforeCreate() {
-                        // console.log('beforeCreate', 'child');
-                    },
-                    mounted() {
-                        // console.log('mounted', 'child')
-                    },
-                    methods: {
-                      fn4() {
-                        console.log('fn4----')
-                        console.log('this---', this)
-                        this.$emit('test')
-                      },
-                      fn6() {
-                        this.aaa = 888
-                        console.log(this.aaa)
-                      }
-                    }
-                }
-            },
-            methods: {
-              fn1() {
-                console.log('fn1---this---', this)
-                this.$on('test', () => {
-                  console.log('test--on--emit----')
-                })
-              },
-              fn3() {
-                console.log('fn3---')
-                this.$emit('test')
-              },
-              fn7() {
-                this.aaa = 999
-                console.log(this.aaa)
-              }
-            }
-        });
-        // vm.arr = [1,2,3];
-        // setTimeout(() => {
-           
-        //     vm.arr.push(5);            
-        // }, 1000);
+       const vm = new Vue({
+         el: '#app'
+       })
     </script>
 
 </body>

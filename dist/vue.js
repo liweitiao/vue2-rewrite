@@ -1021,6 +1021,7 @@
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     let children = genChildren(el);
+    debugger;
     let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`; // console.log('generate---code---', code)
 
     return code;
@@ -1108,6 +1109,16 @@
     }
   }
 
+  function addAttr(el, name, value, dynamic) {
+    const attrs = dynamic ? el.dynamicAttrs || (el.dynamicAttrs = []) : el.attrs || (el.attrs = []);
+    attrs.push({
+      name,
+      value,
+      dynamic
+    });
+    el.plain = false;
+  }
+
   // // 看一下用户是否传入了 , 没传入可能传入的是 template, template如果也没有传递
   function createAstElement(tagName, attrs) {
     return {
@@ -1120,7 +1131,46 @@
   }
   function parse(template, options) {
     let root;
+    let currentParent;
     const stack = [];
+
+    function closeElement(element) {
+      // processElement(element)
+      // debugger
+      element = processElement(element); // processSlotContent(el)
+      // currentParent || currentParent.children.push(element)
+
+      element.parent = currentParent; // debugger
+      // return element
+    }
+
+    function processElement(element) {
+      processSlotContent(element); // debugger
+
+      return element;
+    }
+
+    function getBindingAttr(el, name) {
+      let slotTarget = el.attrs[0] && el.attrs[0]['value'];
+      return slotTarget;
+    }
+
+    function processSlotContent(el) {
+      // debugger
+      var slotTarget = getBindingAttr(el);
+
+      if (slotTarget) {
+        el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget;
+        el.attrsMap = el.attrsMap || {};
+        el.attrsMap['slot'] = slotTarget;
+        el.slotTargetDynamic = !!(el.attrsMap[':slot'] || el.attrsMap['v-bind:slot']);
+
+        if (!el.slotScope) {
+          addAttr(el, 'slot', slotTarget, getBindingAttr(el));
+        }
+      }
+    }
+
     parseHTML(template, {
       start(tagName, attributes) {
         let parent = stack[stack.length - 1];
@@ -1140,11 +1190,16 @@
       },
 
       end(tagName) {
-        let last = stack.pop();
+        const element = stack[stack.length - 1];
+        stack.length -= 1;
+        currentParent = stack[stack.length - 1];
 
-        if (last.tag !== tagName) {
+        if (element.tag !== tagName) {
           throw new Error('标签有误');
-        }
+        } // debugger
+
+
+        closeElement(element); // debugger
       },
 
       chars(text) {
