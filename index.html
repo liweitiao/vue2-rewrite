@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<!-- 当在页面中直接写fullname时 fullname不会去收集渲染watcher ， 因为fullname没有dep 没有收集的功能 -->
+<!-- firstName 是在计算属性中使用的 ，所以他会收集计算属性watcher。 没有收集渲染watcher -->
+
+<!-- 计算属性中的值应该记录 计算属性watcher 和渲染watcher -->
+
+<!-- Dep.target上赋值一个渲染watcher ， 又将Dep.target设置为计算属性watcher-->
+
+<body>
+    <!-- <div id="app">{{fullName}}</div> -->
+    <div id="app"> <button>{{arr}} ---</button>
+      <my-button></my-button>
+    </div>
+    
+    <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
+    
+    
+    
+    <script src="dist/vue.js"></script>
+    <!-- <script src="./Vue.js"></script> -->
+    <script>
+        
+        Vue.component("my-button", { // Vue.options.components = {"my-button":fn}
+            template: '<button>hello</button>',
+            methods: {
+              fn2() {
+                console.log('fn2---')
+                console.log(this)
+
+                this.$emit('test')
+              }
+            }
+        });
+
+        
+        const vm = new Vue({ // .__proto__
+            el: '#app',
+            data:{
+                arr:[1, 2, 3]
+            },
+            provide: {
+              aaa: 777
+            },
+            beforeCreate() {
+                console.log('beforeCreate', 'parent')
+            },
+            mounted() {
+                console.log('mounted', 'parent')
+            },
+            components: {
+                "my-button": {
+                    template: '<button>world---{{aaa}}</button>',
+                    inject: ['aaa'],
+                    beforeCreate() {
+                        console.log('beforeCreate', 'child');
+                    },
+                    mounted() {
+                        console.log('mounted', 'child')
+                    },
+                    methods: {
+                      fn4() {
+                        console.log('fn4----')
+                        console.log('this---', this)
+                        this.$emit('test')
+                      },
+                      fn6() {
+                        this.aaa = 888
+                        console.log(this.aaa)
+                      }
+                    }
+                }
+            },
+            methods: {
+              fn1() {
+                console.log('fn1---this---', this)
+                this.$on('test', () => {
+                  console.log('test--on--emit----')
+                })
+              },
+              fn3() {
+                console.log('fn3---')
+                this.$emit('test')
+              },
+              fn7() {
+                this.aaa = 999
+                console.log(this.aaa)
+              }
+            }
+        });
+        // vm.arr = [1,2,3];
+        // setTimeout(() => {
+           
+        //     vm.arr.push(5);            
+        // }, 1000);
+    </script>
+
+</body>
+
+</html>
