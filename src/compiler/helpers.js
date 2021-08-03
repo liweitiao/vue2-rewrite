@@ -5,3 +5,9 @@ export function addAttr (el, name, value, dynamic) {
   attrs.push({ name, value, dynamic })
   el.plain = false
 }
+
+export function getRawBindingAttr (el, name) {
+  return el.rawAttrsMap[':' + name] ||
+    el.rawAttrsMap['v-bind:' + name] ||
+    el.rawAttrsMap[name]
+}

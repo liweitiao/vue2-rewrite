@@ -17,12 +17,13 @@
 <body>
     <!-- <div id="app">{{fullName}}</div> -->
     <div id="app">
-      <my>
+      <div a=112>2222</div>
+      <my></my>
+    </div>
+    <!-- <my>
         <h1 slot="title">标题</h1>
         <div slot="content">内容</div>
-      </my>
-    </div>
-    
+      </my> -->
     <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
     
@@ -32,11 +33,17 @@
     <!-- <script src="./Vue.js"></script> -->
     <script>
         
-       Vue.component('my', {
+       Vue.component('my1', {
          template: `<div>
           <slot name="content">123</slot>
           <slot name="title">456</slot>
           <slot name="content">123</slot>
+        `
+       })
+
+       Vue.component('my', {
+         template: `<div>
+          <button>333</button>
         `
        })
 

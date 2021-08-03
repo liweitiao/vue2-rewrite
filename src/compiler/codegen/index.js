@@ -55,15 +55,37 @@ function genChildren(el) {
     return false;
 }
 
+function genData(el) {
+    let data = '{'
+    if (el.slotTarget) {
+        data += `slot:${el.slotTarget}`
+    }
+    data += '}'
+
+    return data
+}
+
 export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
+    const code = el ? genElement(el) : '_c("div")'
+    return code;
+}
+
+export function genElement(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
+    // 遍历树 将树拼接成字符串
+    let data
+    if (!el.plain) {
+        data = genData(el)
+    }
+    
+
     let children = genChildren(el);
-    debugger
+    // debugger
     let code = `_c('${el.tag}',${
         el.attrs.length? genProps(el.attrs): 'undefined'
     }${
         children? `,${children}`:''
     })`;
-    // console.log('generate---code---', code)
+    
     return code;
 }

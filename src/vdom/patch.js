@@ -1,5 +1,5 @@
 export function patch(oldVnode, vnode) {
-
+    // console.log('patch----')
   if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
   }

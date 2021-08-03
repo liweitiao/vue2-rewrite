@@ -645,6 +645,7 @@
   }
 
   function patch(oldVnode, vnode) {
+    // console.log('patch----')
     if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
@@ -923,7 +924,7 @@
     let updateComponent = () => {
       let vnode = vm._render();
 
-      console.log('lifecycle----mountComponent----vnode----', vnode);
+      console.log('lifecycle----mountComponent----vnode----', vnode); // debugger
 
       vm._update(vnode);
     };
@@ -1017,13 +1018,32 @@
     return false;
   }
 
+  function genData(el) {
+    let data = '{';
+
+    if (el.slotTarget) {
+      data += `slot:${el.slotTarget}`;
+    }
+
+    data += '}';
+    return data;
+  }
+
   function generate(el) {
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
-    let children = genChildren(el);
-    debugger;
-    let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`; // console.log('generate---code---', code)
+    const code = el ? genElement(el) : '_c("div")';
+    return code;
+  }
+  function genElement(el) {
 
+    if (!el.plain) {
+      genData(el);
+    }
+
+    let children = genChildren(el); // debugger
+
+    let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`;
     return code;
   }
 
@@ -1340,7 +1360,7 @@
   }
 
   function createComponent(vm, tag, data, key, children, Ctor) {
-    console.log('vdom---createComponent---Ctor---', Ctor);
+    console.log('vdom---createComponent----tag---Ctor---', tag, Ctor);
 
     if (isObject(Ctor)) {
       Ctor = vm.$options._base.extend(Ctor);

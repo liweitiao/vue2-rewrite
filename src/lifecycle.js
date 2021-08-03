@@ -41,6 +41,7 @@ export function mountComponent(vm, el) {
   let updateComponent = () => {
     let vnode = vm._render()
     console.log('lifecycle----mountComponent----vnode----', vnode)
+    // debugger
     vm._update(vnode)
   }
 

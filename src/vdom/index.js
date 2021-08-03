@@ -11,7 +11,7 @@ export function createElement(vm, tag, data = {}, ...children) {
 }
 
 function createComponent(vm, tag, data, key, children, Ctor) {
-  console.log('vdom---createComponent---Ctor---', Ctor)
+  console.log('vdom---createComponent----tag---Ctor---', tag, Ctor)
   if (isObject(Ctor)) {
     Ctor = vm.$options._base.extend(Ctor)
   }
