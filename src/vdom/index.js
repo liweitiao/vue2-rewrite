@@ -6,19 +6,21 @@ export function createElement(vm, tag, data = {}, ...children) {
     return vnode(vm, tag, data, data.key, children, undefined);
   } else {
     const Ctor = vm.$options.components[tag]
+    // debugger
     return createComponent(vm, tag, data, data.key, children, Ctor)
   }
 }
 
 function createComponent(vm, tag, data, key, children, Ctor) {
-  console.log('vdom---createComponent----tag---Ctor---', tag, Ctor)
+  console.log('vdom---createComponent----arguments---', arguments)
   if (isObject(Ctor)) {
     Ctor = vm.$options._base.extend(Ctor)
   }
   data.hook = {
     init(vnode) {
       // debugger
-      let child = vnode.componentInstance = new Ctor({_isComponent: true, parent: vm})
+      // vm._parentVnode = vnode
+      let child = vnode.componentInstance = new Ctor({_isComponent: true, parent: vm, _parentVnode: vnode})
 
       // debugger
       child.$mount()
@@ -34,7 +36,8 @@ export function createTextElement(vm, text) {
 }
 
 function vnode(vm, tag, data, key, children, text, componentOptions) {
-  console.log('vnode----arguments---', arguments)
+  // debugger
+  // console.log('vnode----arguments---', arguments)
   return {
       vm,
       tag,

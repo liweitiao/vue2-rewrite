@@ -41,8 +41,16 @@ export function parse(template, options) {
 
     function processElement(element) {
         processSlotContent(element)
+        processSlotOutlet(element)
         // debugger
         return element
+    }
+
+    function processSlotOutlet(el) {
+        if (el.tag === 'slot') {
+            // debugger
+            el.slotName = `"${getBindingAttr(el, 'name')}"`
+        }
     }
 
     function getBindingAttr(el, name) {

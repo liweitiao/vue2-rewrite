@@ -1,5 +1,6 @@
 export function patch(oldVnode, vnode) {
     // console.log('patch----')
+    debugger
   if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
   }
@@ -188,7 +189,7 @@ function patchProps(vnode, oldProps = {}) { // 初次渲染时可以调用此方
 
 function createComponent(vnode) {
   let i = vnode.data; //  vnode.data.hook.init
-  if ((i = i.hook) && (i = i.init)) {
+  if (i && (i = i.hook) && (i = i.init)) {
       i(vnode); // 调用init方法
   }
   if (vnode.componentInstance) { // 有属性说明子组件new完毕了，并且组件对应的真实DOM挂载到了componentInstance.$el
@@ -197,7 +198,7 @@ function createComponent(vnode) {
 
 }
 export function createElm(vnode) {
-  let { tag, data, children, text, vm } = vnode
+  let { tag, data, children, text, vm } = Array.isArray(vnode) ? vnode[0] : vnode
   if (typeof tag === 'string') { // 元素
       if (createComponent(vnode)) {
           // 返回组件对应的真实节点

@@ -4,6 +4,7 @@ import { callHook, mountComponent, initLifecycle } from "./lifecycle"
 import { compileToFunction } from "./compiler/index";
 import { mergeOptions } from './utils'
 import { initInjections, initProvide } from './inject'
+import { initRender } from './render'
 
 let uid = 0
 
@@ -12,11 +13,17 @@ export function initMixin(Vue) {
   Vue.prototype._init = function(options) {
     const vm = this
     vm._uid = uid++
-    vm.$options = mergeOptions(vm.constructor.options, options)
+    if (options && options._isComponent) {
+      initInternalComponent(vm, options)
+    } else {
+      vm.$options = mergeOptions(vm.constructor.options, options)
+    }
+
 
     // console.log('init---vm.$options---', vm.$options)
     initLifecycle(vm)
     initEvents(vm)
+    initRender(vm)
     callHook(vm, 'beforeCreate')
     // debugger
     initInjections(vm)
@@ -48,4 +55,15 @@ export function initMixin(Vue) {
     // debugger
     mountComponent(vm, el)
   }
+}
+
+export function initInternalComponent(vm, options) {
+  const opts = vm.$options = Object.create(vm.constructor.options)
+  // debugger
+  // console.log('vm---', vm, options)
+  const parentVnode = options._parentVnode
+  opts.parent = options.parent
+  opts._parentVnode = parentVnode
+  const vnodeComponentOptions = parentVnode.componentOptions
+  opts._renderChildren = vnodeComponentOptions.children
 }

@@ -65,6 +65,18 @@ function genData(el) {
     return data
 }
 
+function genSlot(el) {
+    var slotName = el.slotName || '"default"'
+    var children = genChildren(el)
+    var res = "_t(" + slotName + (children ? (",function(){return " + children + "}") : '')
+    // TODO...
+    // var attrs = el.attrs || el.dynamicAttrs
+
+    res += ')'
+    // debugger
+    return res
+}
+
 export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     const code = el ? genElement(el) : '_c("div")'
@@ -77,15 +89,20 @@ export function genElement(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world
     if (!el.plain) {
         data = genData(el)
     }
-    
+    if (el.tag === 'slot') {
+        return genSlot(el)
+    } else {
+        let children = genChildren(el);
+        // debugger
+        let code = `_c('${el.tag}',${
+            el.attrs.length? genProps(el.attrs): 'undefined'
+        }${
+            children? `,${children}`:''
+        })`;
 
-    let children = genChildren(el);
-    // debugger
-    let code = `_c('${el.tag}',${
-        el.attrs.length? genProps(el.attrs): 'undefined'
-    }${
-        children? `,${children}`:''
-    })`;
+        return code;
+    }
+
     
-    return code;
+    
 }

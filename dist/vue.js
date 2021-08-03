@@ -646,6 +646,8 @@
 
   function patch(oldVnode, vnode) {
     // console.log('patch----')
+    debugger;
+
     if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
@@ -848,7 +850,7 @@
   function createComponent$1(vnode) {
     let i = vnode.data; //  vnode.data.hook.init
 
-    if ((i = i.hook) && (i = i.init)) {
+    if (i && (i = i.hook) && (i = i.init)) {
       i(vnode); // 调用init方法
     }
 
@@ -865,7 +867,7 @@
       children,
       text,
       vm
-    } = vnode;
+    } = Array.isArray(vnode) ? vnode[0] : vnode;
 
     if (typeof tag === 'string') {
       // 元素
@@ -1029,6 +1031,17 @@
     return data;
   }
 
+  function genSlot(el) {
+    var slotName = el.slotName || '"default"';
+    var children = genChildren(el);
+    var res = "_t(" + slotName + (children ? ",function(){return " + children + "}" : ''); // TODO...
+    // var attrs = el.attrs || el.dynamicAttrs
+
+    res += ')'; // debugger
+
+    return res;
+  }
+
   function generate(el) {
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
@@ -1041,10 +1054,14 @@
       genData(el);
     }
 
-    let children = genChildren(el); // debugger
+    if (el.tag === 'slot') {
+      return genSlot(el);
+    } else {
+      let children = genChildren(el); // debugger
 
-    let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`;
-    return code;
+      let code = `_c('${el.tag}',${el.attrs.length ? genProps(el.attrs) : 'undefined'}${children ? `,${children}` : ''})`;
+      return code;
+    }
   }
 
   const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`; // 标签名 
@@ -1165,9 +1182,17 @@
     }
 
     function processElement(element) {
-      processSlotContent(element); // debugger
+      processSlotContent(element);
+      processSlotOutlet(element); // debugger
 
       return element;
+    }
+
+    function processSlotOutlet(el) {
+      if (el.tag === 'slot') {
+        // debugger
+        el.slotName = `"${getBindingAttr(el)}"`;
+      }
     }
 
     function getBindingAttr(el, name) {
@@ -1303,16 +1328,151 @@
     }
   }
 
+  function createElement(vm, tag, data = {}, ...children) {
+    // console.log('vdom---tag---data--', tag, data)
+    if (isReservedTag(tag)) {
+      return vnode(vm, tag, data, data.key, children, undefined);
+    } else {
+      const Ctor = vm.$options.components[tag]; // debugger
+
+      return createComponent(vm, tag, data, data.key, children, Ctor);
+    }
+  }
+
+  function createComponent(vm, tag, data, key, children, Ctor) {
+    console.log('vdom---createComponent----arguments---', arguments);
+
+    if (isObject(Ctor)) {
+      Ctor = vm.$options._base.extend(Ctor);
+    }
+
+    data.hook = {
+      init(vnode) {
+        // debugger
+        // vm._parentVnode = vnode
+        let child = vnode.componentInstance = new Ctor({
+          _isComponent: true,
+          parent: vm,
+          _parentVnode: vnode
+        }); // debugger
+
+        child.$mount();
+      }
+
+    }; // console.log('vdom---createComponent---Ctor---', Ctor)
+    // console.log(vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {Ctor, children}))
+
+    return vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {
+      Ctor,
+      children
+    });
+  }
+
+  function createTextElement(vm, text) {
+    return vnode(vm, undefined, undefined, undefined, undefined, text);
+  }
+
+  function vnode(vm, tag, data, key, children, text, componentOptions) {
+    // debugger
+    // console.log('vnode----arguments---', arguments)
+    return {
+      vm,
+      tag,
+      data,
+      key,
+      children,
+      text,
+      componentOptions // .....
+
+    };
+  }
+
+  function installRenderHelpers(target) {
+    target._c = function () {
+      return createElement(this, ...arguments);
+    };
+
+    target._v = function (text) {
+      return createTextElement(this, text);
+    };
+
+    target._s = function (val) {
+      if (typeof val === 'object') return JSON.stringify(val);
+      return val;
+    };
+
+    target._t = function (name) {
+      let nodes; // debugger
+
+      nodes = this.$slots[name];
+      return nodes;
+    };
+  }
+  function resolveSlots(children, context) {
+    if (!children || !children.length) {
+      return {};
+    } // debugger
+
+
+    const slots = {};
+
+    for (let i = 0, l = children.length; i < l; i++) {
+      const child = children[i];
+      const data = child.data; // if (data && data.slot) {
+      //   delete data.slot
+      // }
+
+      if (data && data.slot != null) {
+        const name = data.slot;
+        const slot = slots[name] || (slots[name] = []);
+        slot.push(child);
+      } else {
+        (slots.default || (slots.default = [])).push(child);
+      }
+    }
+
+    return slots;
+  }
+
+  function initRender(vm) {
+    vm._vnode = null; // debugger
+
+    const options = vm.$options;
+    vm.$vnode = options._parentVnode; // const renderContext = parentVnode && parentVnode.context
+    // change...FIXME...
+
+    vm && vm.$parent;
+    vm.$slots = resolveSlots(options._renderChildren);
+  }
+  function renderMixin(Vue) {
+    // console.log('renderMixin---')
+    installRenderHelpers(Vue.prototype);
+
+    Vue.prototype._render = function () {
+      const vm = this;
+      let render = vm.$options.render;
+      let vnode = render.call(vm);
+      return vnode;
+    };
+  }
+
   let uid = 0;
   function initMixin(Vue) {
     // console.log('initMixin----')
     Vue.prototype._init = function (options) {
       const vm = this;
       vm._uid = uid++;
-      vm.$options = mergeOptions(vm.constructor.options, options); // console.log('init---vm.$options---', vm.$options)
+
+      if (options && options._isComponent) {
+        initInternalComponent(vm, options);
+      } else {
+        vm.$options = mergeOptions(vm.constructor.options, options);
+      } // console.log('init---vm.$options---', vm.$options)
+
 
       initLifecycle(vm);
       initEvents(vm);
+      initRender(vm);
       callHook(vm, 'beforeCreate'); // debugger
 
       initInjections(vm);
@@ -1348,87 +1508,15 @@
       mountComponent(vm);
     };
   }
+  function initInternalComponent(vm, options) {
+    const opts = vm.$options = Object.create(vm.constructor.options); // debugger
+    // console.log('vm---', vm, options)
 
-  function createElement(vm, tag, data = {}, ...children) {
-    // console.log('vdom---tag---data--', tag, data)
-    if (isReservedTag(tag)) {
-      return vnode(vm, tag, data, data.key, children, undefined);
-    } else {
-      const Ctor = vm.$options.components[tag];
-      return createComponent(vm, tag, data, data.key, children, Ctor);
-    }
-  }
-
-  function createComponent(vm, tag, data, key, children, Ctor) {
-    console.log('vdom---createComponent----tag---Ctor---', tag, Ctor);
-
-    if (isObject(Ctor)) {
-      Ctor = vm.$options._base.extend(Ctor);
-    }
-
-    data.hook = {
-      init(vnode) {
-        // debugger
-        let child = vnode.componentInstance = new Ctor({
-          _isComponent: true,
-          parent: vm
-        }); // debugger
-
-        child.$mount();
-      }
-
-    }; // console.log('vdom---createComponent---Ctor---', Ctor)
-    // console.log(vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {Ctor, children}))
-
-    return vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {
-      Ctor,
-      children
-    });
-  }
-
-  function createTextElement(vm, text) {
-    return vnode(vm, undefined, undefined, undefined, undefined, text);
-  }
-
-  function vnode(vm, tag, data, key, children, text, componentOptions) {
-    console.log('vnode----arguments---', arguments);
-    return {
-      vm,
-      tag,
-      data,
-      key,
-      children,
-      text,
-      componentOptions // .....
-
-    };
-  }
-
-  function installRenderHelpers(target) {
-    target._c = function () {
-      return createElement(this, ...arguments);
-    };
-
-    target._v = function (text) {
-      return createTextElement(this, text);
-    };
-
-    target._s = function (val) {
-      if (typeof val === 'object') return JSON.stringify(val);
-      return val;
-    };
-  }
-
-  function renderMixin(Vue) {
-    // console.log('renderMixin---')
-    installRenderHelpers(Vue.prototype);
-
-    Vue.prototype._render = function () {
-      const vm = this;
-      let render = vm.$options.render;
-      let vnode = render.call(vm);
-      return vnode;
-    };
+    const parentVnode = options._parentVnode;
+    opts.parent = options.parent;
+    opts._parentVnode = parentVnode;
+    const vnodeComponentOptions = parentVnode.componentOptions;
+    opts._renderChildren = vnodeComponentOptions.children;
   }
 
   function initGlobalApi(Vue) {

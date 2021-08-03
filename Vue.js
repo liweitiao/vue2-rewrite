@@ -2713,6 +2713,7 @@
         (typeof fallbackRender === 'function' ? fallbackRender() : fallbackRender);
     }
 
+    // debugger
     var target = props && props.slot;
     if (target) {
       return this.$createElement('template', { slot: target }, nodes)
@@ -3288,6 +3289,7 @@
       { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, children: children },
       asyncFactory
     );
+    // debugger
 
     return vnode
   }
@@ -3507,6 +3509,7 @@
   function initRender (vm) {
     vm._vnode = null; // the root of the child tree
     vm._staticTrees = null; // v-once cached trees
+    // debugger
     var options = vm.$options;
     var parentVnode = vm.$vnode = options._parentVnode; // the placeholder node in parent tree
     var renderContext = parentVnode && parentVnode.context;
@@ -4993,6 +4996,7 @@
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
         // internal component options needs special treatment.
+        // debugger
         initInternalComponent(vm, options);
       } else {
         vm.$options = mergeOptions(
@@ -5030,6 +5034,7 @@
   }
 
   function initInternalComponent (vm, options) {
+    // debugger
     var opts = vm.$options = Object.create(vm.constructor.options);
     // doing this because it's faster than dynamic enumeration.
     var parentVnode = options._parentVnode;
@@ -6501,6 +6506,7 @@
     }
 
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
+      debugger
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return
@@ -10989,6 +10995,7 @@
     var state = new CodegenState(options);
     // fix #11483, Root level <script> tags should not be rendered.
     var code = ast ? (ast.tag === 'script' ? 'null' : genElement(ast, state)) : '_c("div")';
+    console.log('generate----code', code)
     return {
       render: ("with(this){return " + code + "}"),
       staticRenderFns: state.staticRenderFns
