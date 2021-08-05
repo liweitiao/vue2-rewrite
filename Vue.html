@@ -7,43 +7,27 @@
     <title>Document</title>
 </head>
 
-<!-- 当在页面中直接写fullname时 fullname不会去收集渲染watcher ， 因为fullname没有dep 没有收集的功能 -->
-<!-- firstName 是在计算属性中使用的 ，所以他会收集计算属性watcher。 没有收集渲染watcher -->
-
-<!-- 计算属性中的值应该记录 计算属性watcher 和渲染watcher -->
-
-<!-- Dep.target上赋值一个渲染watcher ， 又将Dep.target设置为计算属性watcher-->
-
 <body>
-    <!-- <div id="app">{{fullName}}</div> -->
-    <div id="app">
-      <my>
-          <button slot="title">标题</button>
-          <div slot="content">内容</div>
-        </my>
-    </div>
-    <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
-    
-    
-    
-    <!-- <script src="dist/vue.js"></script> -->
     <script src="./Vue.js"></script>
+    <div id="app"></div>
     <script>
-        
-       Vue.component('my', {
-         template: `<div>
-          <slot name="content"></slot>
-          <slot name="title"></slot>
-          <slot name="content"></slot>
-        </div>`
-       })
-
-       const vm = new Vue({
-         el: '#app'
-       })
+        Vue.component('async-component', () => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve({
+                        render: h => h('h1', {}, 'zf'),
+                    })
+                }, 1000);
+            })
+        })
+        const vm = new Vue({
+            el: '#app',
+            render: (h,context) => {
+                // debugger;
+                return h('async-component')
+            }
+        })
     </script>
-
 </body>
 
 </html>

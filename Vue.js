@@ -6506,7 +6506,7 @@
     }
 
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
-      debugger
+      // debugger
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return

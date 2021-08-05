@@ -6,7 +6,15 @@ export function lifecycleMixin(Vue) {
   Vue.prototype._update = function(vnode) {
     const vm = this
     // debugger
-    vm.$el = patch(vm.$el, vnode)
+    const prevEl = vm.$el // previously 先前
+    const prevVnode = vm._vnode
+    vm._vnode = vnode
+    // debugger
+    if (!prevVnode) {
+      vm.$el = patch(vm.$el, vnode)
+    } else {
+      vm.$el = patch(prevVnode, vnode)
+    }
   }
   Vue.prototype.$nextTick = nextTick
 }

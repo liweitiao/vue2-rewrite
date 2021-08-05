@@ -892,7 +892,16 @@
     Vue.prototype._update = function (vnode) {
       const vm = this; // debugger
 
-      vm.$el = patch(vm.$el, vnode);
+      vm.$el; // previously 先前
+
+      const prevVnode = vm._vnode;
+      vm._vnode = vnode; // debugger
+
+      if (!prevVnode) {
+        vm.$el = patch(vm.$el, vnode);
+      } else {
+        vm.$el = patch(prevVnode, vnode);
+      }
     };
 
     Vue.prototype.$nextTick = nextTick;
@@ -1345,23 +1354,51 @@
 
     if (isObject(Ctor)) {
       Ctor = baseCtor.exend(Ctor);
-    }
+    } // data.hook = {
+    //   init(vnode) {
+    //     console.log('init----vnode---', vnode)
+    //     let child = vnode.componentInstance = new Ctor({_isComponent: true, parent: context, _parentVnode: vnode})
+    //     child.$mount()
+    //   }
+    // }
 
-    data.hook = {
-      init(vnode) {
-        let child = vnode.componentInstance = new Ctor({
-          _isComponent: true,
-          parent: context,
-          _parentVnode: vnode
-        });
-        child.$mount();
-      }
 
-    };
-    return new VNode(context, `vue-component-${tag}`, data, key, undefined, undefined, {
+    installComponentHooks(data);
+    console.log('createComponent---data---', data);
+    const vnode = new VNode(context, `vue-component-${tag}`, data, key, undefined, undefined, {
       Ctor,
       children
     });
+    return vnode;
+  }
+  const componentVNodeHooks = {
+    init(vnode) {
+      if (vnode.componentInstance) ; else {
+        const child = vnode.componentInstance = createComponentInstanceForVnode(vnode);
+        child.$mount();
+      }
+    }
+
+  };
+  const hooksToMerge = Object.keys(componentVNodeHooks);
+
+  function createComponentInstanceForVnode(vnode) {
+    const options = {
+      _isComponent: true,
+      _parentVnode: vnode,
+      parent: vnode.context
+    };
+    return new vnode.componentOptions.Ctor(options);
+  }
+
+  function installComponentHooks(data) {
+    const hooks = data.hook || (data.hook = {});
+
+    for (let i = 0; i < hooksToMerge.length; i++) {
+      const key = hooksToMerge[i];
+      const value = componentVNodeHooks[key];
+      hooks[key] = value;
+    }
   }
 
   function createElement(context, tag, data = {}, ...children) {
@@ -1448,8 +1485,13 @@
 
     Vue.prototype._render = function () {
       const vm = this;
-      let render = vm.$options.render;
+      const {
+        render,
+        _parentVnode
+      } = vm.$options;
+      vm.$vnode = _parentVnode;
       let vnode = render.call(vm);
+      vnode.parent = _parentVnode;
       return vnode;
     };
   }
@@ -1460,13 +1502,16 @@
     Vue.prototype._init = function (options) {
       const vm = this;
       vm._uid = uid++;
+      vm._isVue = true;
 
       if (options && options._isComponent) {
         initInternalComponent(vm, options);
       } else {
         vm.$options = mergeOptions(vm.constructor.options, options);
-      } // console.log('init---vm.$options---', vm.$options)
+      }
 
+      vm._renderProxy = vm;
+      vm._self = vm; // console.log('init---vm.$options---', vm.$options)
 
       initLifecycle(vm);
       initEvents(vm);

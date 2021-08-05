@@ -20,8 +20,11 @@ export function renderMixin(Vue) {
 
   Vue.prototype._render = function () {
     const vm = this
-    let render = vm.$options.render
+    const { render, _parentVnode } = vm.$options
+    vm.$vnode = _parentVnode
     let vnode = render.call(vm)
+    vnode.parent = _parentVnode
+    
     return vnode
   }
 }

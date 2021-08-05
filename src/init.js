@@ -13,12 +13,16 @@ export function initMixin(Vue) {
   Vue.prototype._init = function(options) {
     const vm = this
     vm._uid = uid++
+    vm._isVue = true
     if (options && options._isComponent) {
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(vm.constructor.options, options)
     }
 
+    vm._renderProxy = vm
+    
+    vm._self = vm
 
     // console.log('init---vm.$options---', vm.$options)
     initLifecycle(vm)
