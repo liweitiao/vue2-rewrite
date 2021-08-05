@@ -646,8 +646,7 @@
 
   function patch(oldVnode, vnode) {
     // console.log('patch----')
-    debugger;
-
+    // debugger
     if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
@@ -866,7 +865,7 @@
       data,
       children,
       text,
-      vm
+      context
     } = Array.isArray(vnode) ? vnode[0] : vnode;
 
     if (typeof tag === 'string') {
@@ -1328,65 +1327,64 @@
     }
   }
 
-  function createElement(vm, tag, data = {}, ...children) {
-    // console.log('vdom---tag---data--', tag, data)
-    if (isReservedTag(tag)) {
-      return vnode(vm, tag, data, data.key, children, undefined);
-    } else {
-      const Ctor = vm.$options.components[tag]; // debugger
-
-      return createComponent(vm, tag, data, data.key, children, Ctor);
+  class VNode {
+    constructor(context, tag, data, key, children, text, componentOptions) {
+      this.context = context;
+      this.tag = tag;
+      this.data = data;
+      this.key = key;
+      this.children = children;
+      this.text = text;
+      this.componentOptions = componentOptions;
     }
+
   }
 
-  function createComponent(vm, tag, data, key, children, Ctor) {
-    console.log('vdom---createComponent----arguments---', arguments);
+  function createComponent(context, tag, data, key, children, Ctor) {
+    const baseCtor = context.$options._base;
 
     if (isObject(Ctor)) {
-      Ctor = vm.$options._base.extend(Ctor);
+      Ctor = baseCtor.exend(Ctor);
     }
 
     data.hook = {
       init(vnode) {
-        // debugger
-        // vm._parentVnode = vnode
         let child = vnode.componentInstance = new Ctor({
           _isComponent: true,
-          parent: vm,
+          parent: context,
           _parentVnode: vnode
-        }); // debugger
-
+        });
         child.$mount();
       }
 
-    }; // console.log('vdom---createComponent---Ctor---', Ctor)
-    // console.log(vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {Ctor, children}))
-
-    return vnode(vm, `vue-component-${tag}`, data, key, undefined, undefined, {
+    };
+    return new VNode(context, `vue-component-${tag}`, data, key, undefined, undefined, {
       Ctor,
       children
     });
   }
 
-  function createTextElement(vm, text) {
-    return vnode(vm, undefined, undefined, undefined, undefined, text);
+  function createElement(context, tag, data = {}, ...children) {
+    // TODO...
+    return _createElement(context, tag, data, children);
+  }
+  function _createElement(context, tag, data, children) {
+    let vnode;
+
+    if (isReservedTag(tag)) {
+      vnode = new VNode(context, tag, data, data.key, children, undefined);
+    } else {
+      const Ctor = context.$options.components[tag];
+      return createComponent(context, tag, data, data.key, children, Ctor);
+    }
+
+    return vnode;
+  }
+  function createTextElement(context, text) {
+    return new VNode(context, undefined, undefined, undefined, undefined, text);
   }
 
-  function vnode(vm, tag, data, key, children, text, componentOptions) {
-    // debugger
-    // console.log('vnode----arguments---', arguments)
-    return {
-      vm,
-      tag,
-      data,
-      key,
-      children,
-      text,
-      componentOptions // .....
-
-    };
-  }
-
+  // import { createElement, createTextElement } from "./vdom/index"
   function installRenderHelpers(target) {
     target._c = function () {
       return createElement(this, ...arguments);

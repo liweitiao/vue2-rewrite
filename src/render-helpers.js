@@ -1,4 +1,5 @@
-import { createElement, createTextElement } from "./vdom/index"
+// import { createElement, createTextElement } from "./vdom/index"
+import { createElement, createTextElement } from './vdom/create-element'
 
 export function installRenderHelpers (target) {
   target._c = function() {

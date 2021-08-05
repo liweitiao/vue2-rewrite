@@ -1,6 +1,6 @@
 export function patch(oldVnode, vnode) {
     // console.log('patch----')
-    debugger
+    // debugger
   if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
   }
@@ -198,7 +198,7 @@ function createComponent(vnode) {
 
 }
 export function createElm(vnode) {
-  let { tag, data, children, text, vm } = Array.isArray(vnode) ? vnode[0] : vnode
+  let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
   if (typeof tag === 'string') { // 元素
       if (createComponent(vnode)) {
           // 返回组件对应的真实节点
@@ -209,8 +209,6 @@ export function createElm(vnode) {
       children.forEach(child => {
           vnode.el.appendChild(createElm(child))
       });
-
-
   } else {
       vnode.el = document.createTextNode(text);
   }
