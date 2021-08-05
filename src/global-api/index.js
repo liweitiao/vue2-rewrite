@@ -1,6 +1,9 @@
 import { mergeOptions } from '../utils'
 
 export function initGlobalApi(Vue) {
+  Vue.cid = 0
+  let cid = 1
+  
   Vue.options = {}
   Vue.mixin = function(options) {
     this.options = mergeOptions(this.options, options)
@@ -23,6 +26,7 @@ export function initGlobalApi(Vue) {
     }
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
+    Sub.cid = cid++
     Sub.options = mergeOptions(Super.options, opts)
     // console.log('global-api----extend----Sub.options---', Sub.options)
     return Sub
