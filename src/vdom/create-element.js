@@ -14,7 +14,8 @@ export function _createElement(context, tag, data, children) {
     vnode = new VNode(context, tag, data, data.key, children, undefined)
   } else {
     const Ctor = context.$options.components[tag]
-    return createComponent(context, tag, data, data.key, children, Ctor)
+    vnode = createComponent(context, tag, data, data.key, children, Ctor)
+    return vnode
   }
   
   return vnode

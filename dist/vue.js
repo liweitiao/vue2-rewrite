@@ -10,6 +10,19 @@
   function isObject(val) {
     return typeof val == 'object' && val !== null;
   }
+  const _toString = Object.prototype.toString;
+  function isPlainObject(obj) {
+    return _toString.call(obj) === '[object Object]';
+  }
+  function isUndef(v) {
+    return v === undefined || v === null;
+  }
+  function isDef(v) {
+    return v !== undefined && v !== null;
+  }
+  function isPromise(val) {
+    return isDef(val) && typeof val.then === 'function' && typeof val.catch === 'function';
+  }
   const noop = () => {};
   function toArray(list) {
     let i = list.length;
@@ -20,6 +33,15 @@
     }
 
     return ret;
+  }
+  function once(fn) {
+    let called = false;
+    return function () {
+      if (!called) {
+        called = true;
+        fn.apply(this, arguments);
+      }
+    };
   }
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   function hasOwn(obj, key) {
@@ -342,7 +364,8 @@
 
       this.cb = cb;
       this.options = options;
-      this.id = id++; // this.getter = exprOrFn
+      this.id = id++;
+      vm._watcher = this; // this.getter = exprOrFn
 
       if (typeof exprOrFn == 'string') {
         this.getter = function () {
@@ -905,6 +928,15 @@
     };
 
     Vue.prototype.$nextTick = nextTick;
+
+    Vue.prototype.$forceUpdate = function () {
+      debugger;
+      const vm = this;
+
+      if (vm._watcher) {
+        vm._watcher.update();
+      }
+    };
   }
   function initLifecycle(vm) {
     const options = vm.$options; // locate first non-abstract parent
@@ -1348,20 +1380,114 @@
     }
 
   }
+  const createEmptyVNode = text => {
+    const node = new VNode();
+    node.text = text;
+    node.isComment = true;
+    return node;
+  };
+
+  function ensureCtor(comp, base) {
+    return isObject(comp) ? base.extend(comp) : comp;
+  }
+
+  function createAsyncPlaceholder(factory, data, context, children, tag) {
+    const node = createEmptyVNode();
+    node.asyncFactory = factory;
+    node.asyncMeta = {
+      data,
+      context,
+      children,
+      tag
+    };
+    return node;
+  }
+  function resolveAsyncComponent(factory, baseCtor) {
+    debugger;
+    console.log('resolveAsyncComponent--factory--baseCtor---', factory, baseCtor);
+
+    if (isDef(factory.resolved)) {
+      return factory.resolved;
+    }
+
+    var owner = currentRenderingInstance;
+
+    if (owner && !isDef(factory.owners)) {
+      console.log('resolveAsyncComponent----owner---');
+      debugger;
+      const owners = factory.owners = [owner];
+      let sync = true;
+
+      const forceRender = renderCompleted => {
+        for (let i = 0, l = owners.length; i < l; i++) {
+          owners[i].$forceUpdate();
+        }
+
+        if (renderCompleted) {
+          owners.length = 0;
+        }
+      };
+
+      const resolve = once(res => {
+        console.log('res----', res);
+        debugger;
+        factory.resolved = ensureCtor(res, baseCtor);
+
+        if (!sync) {
+          forceRender(true);
+        } else {
+          owners.length = 0;
+        }
+      });
+      const reject = once(reason => {
+        process.env.NODE_ENV !== 'production' && warn(`Failed to resolve async component: ${String(factory)}` + (reason ? `\nReason: ${reason}` : ''));
+      });
+      debugger;
+      const res = factory(resolve, reject);
+      debugger;
+
+      if (isObject(res)) {
+        if (isPromise(res)) {
+          if (isUndef(factory.resolved)) {
+            res.then(resolve, reject);
+          }
+        }
+      }
+
+      sync = false;
+      return factory.loading ? factory.loadingComp : factory.resolved;
+    }
+  }
 
   function createComponent(context, tag, data, key, children, Ctor) {
+    debugger;
     const baseCtor = context.$options._base;
 
     if (isObject(Ctor)) {
       Ctor = baseCtor.exend(Ctor);
-    } // data.hook = {
+    }
+
+    var asyncFactory;
+
+    if (isUndef(Ctor.cid)) {
+      // console.log('Ctor.cid---', Ctor.toString())
+      debugger;
+      asyncFactory = Ctor;
+      Ctor = resolveAsyncComponent(asyncFactory, baseCtor);
+      debugger;
+
+      if (Ctor === undefined) {
+        return createAsyncPlaceholder(asyncFactory, data, context, children, tag);
+      }
+    }
+
+    debugger; // data.hook = {
     //   init(vnode) {
     //     console.log('init----vnode---', vnode)
     //     let child = vnode.componentInstance = new Ctor({_isComponent: true, parent: context, _parentVnode: vnode})
     //     child.$mount()
     //   }
     // }
-
 
     installComponentHooks(data);
     console.log('createComponent---data---', data);
@@ -1412,7 +1538,8 @@
       vnode = new VNode(context, tag, data, data.key, children, undefined);
     } else {
       const Ctor = context.$options.components[tag];
-      return createComponent(context, tag, data, data.key, children, Ctor);
+      vnode = createComponent(context, tag, data, data.key, children, Ctor);
+      return vnode;
     }
 
     return vnode;
@@ -1478,7 +1605,10 @@
 
     vm && vm.$parent;
     vm.$slots = resolveSlots(options._renderChildren);
+
+    vm.$createElement = (a, b, c) => createElement(vm, a, b, c);
   }
+  let currentRenderingInstance = null;
   function renderMixin(Vue) {
     // console.log('renderMixin---')
     installRenderHelpers(Vue.prototype);
@@ -1490,7 +1620,10 @@
         _parentVnode
       } = vm.$options;
       vm.$vnode = _parentVnode;
-      let vnode = render.call(vm);
+      console.log('render---', render.toString());
+      debugger;
+      currentRenderingInstance = vm;
+      let vnode = render.call(vm._renderProxy, vm.$createElement);
       vnode.parent = _parentVnode;
       return vnode;
     };
@@ -1577,7 +1710,10 @@
     Vue.options.components = {};
 
     Vue.component = function (id, definition) {
-      definition = this.options._base.extend(definition); // console.log('global-api----component---definition---', definition)
+      if (isPlainObject(definition)) {
+        definition = this.options._base.extend(definition);
+      } // console.log('global-api----component---definition---', definition)
+
 
       this.options.components[id] = definition;
     };

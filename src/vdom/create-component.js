@@ -1,11 +1,36 @@
-import {  isObject } from "../utils"
+import {  isObject, isUndef } from "../utils"
 import VNode from "./vnode";
+import { resolveAsyncComponent, createAsyncPlaceholder } from './helpers/index'
 
 export function createComponent(context, tag, data, key, children, Ctor) {
+  debugger
   const baseCtor = context.$options._base
   if (isObject(Ctor)) {
     Ctor = baseCtor.exend(Ctor)
   }
+
+  var asyncFactory
+  if (isUndef(Ctor.cid)) {
+
+    // console.log('Ctor.cid---', Ctor.toString())
+    debugger
+    asyncFactory = Ctor
+    Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    debugger
+    if (Ctor === undefined) {
+      return createAsyncPlaceholder(
+        asyncFactory,
+        data,
+        context,
+        children,
+        tag
+      )
+    }
+  }
+
+
+
+  debugger
   // data.hook = {
   //   init(vnode) {
   //     console.log('init----vnode---', vnode)

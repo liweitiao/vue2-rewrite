@@ -6,6 +6,28 @@ export function isObject(val) {
   return typeof val == 'object' && val !== null
 }
 
+const _toString = Object.prototype.toString
+
+export function isPlainObject(obj) {
+  return _toString.call(obj) === '[object Object]'
+}
+
+export function isUndef(v) {
+  return v === undefined || v === null
+}
+
+export function isDef(v) {
+  return v !== undefined && v !== null
+}
+
+export function isPromise (val) {
+  return (
+    isDef(val) &&
+    typeof val.then === 'function' &&
+    typeof val.catch === 'function'
+  )
+}
+
 export const noop = () => {}
 
 export function toArray (list) {
@@ -17,6 +39,15 @@ export function toArray (list) {
   return ret
 }
 
+export function once(fn) {
+  let called = false
+  return function() {
+    if (!called) {
+      called = true
+      fn.apply(this, arguments)
+    }
+  }
+}
 
 const hasOwnProperty = Object.prototype.hasOwnProperty
 export function hasOwn(obj, key) {

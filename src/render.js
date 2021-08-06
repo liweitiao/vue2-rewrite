@@ -1,5 +1,6 @@
 
 import { installRenderHelpers, resolveSlots } from './render-helpers'
+import { createElement } from './vdom/create-element'
 
 
 export function initRender(vm) {
@@ -11,8 +12,11 @@ export function initRender(vm) {
   // change...FIXME...
   const renderContext = vm && vm.$parent
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
+
+  vm.$createElement = (a, b, c) => createElement(vm, a, b, c)
 }
 
+export let currentRenderingInstance = null
 
 export function renderMixin(Vue) {
   // console.log('renderMixin---')
@@ -22,9 +26,12 @@ export function renderMixin(Vue) {
     const vm = this
     const { render, _parentVnode } = vm.$options
     vm.$vnode = _parentVnode
-    let vnode = render.call(vm)
+    console.log('render---', render.toString())
+    debugger
+    currentRenderingInstance = vm
+    let vnode = render.call(vm._renderProxy, vm.$createElement)
     vnode.parent = _parentVnode
-    
+
     return vnode
   }
 }

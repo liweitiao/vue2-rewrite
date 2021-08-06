@@ -13,6 +13,7 @@ class Watcher {
     this.cb = cb
     this.options = options
     this.id = id++
+    vm._watcher = this
     // this.getter = exprOrFn
 
     if (typeof exprOrFn == 'string') {

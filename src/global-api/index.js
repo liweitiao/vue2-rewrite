@@ -1,4 +1,4 @@
-import { mergeOptions } from '../utils'
+import { mergeOptions, isPlainObject } from '../utils'
 
 export function initGlobalApi(Vue) {
   Vue.cid = 0
@@ -14,7 +14,9 @@ export function initGlobalApi(Vue) {
   Vue.options._base = Vue
   Vue.options.components = {}
   Vue.component = function (id, definition) {
-    definition = this.options._base.extend(definition)
+    if (isPlainObject(definition)) {
+      definition = this.options._base.extend(definition)
+    }
     // console.log('global-api----component---definition---', definition)
     this.options.components[id] = definition
   }

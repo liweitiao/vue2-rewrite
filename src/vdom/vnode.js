@@ -9,3 +9,11 @@ export default class VNode {
     this.componentOptions = componentOptions
   }
 }
+
+export const createEmptyVNode = (text) => {
+  const node = new VNode()
+  node.text = text
+  node.isComment = true
+
+  return node
+}
