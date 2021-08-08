@@ -1,3 +1,5 @@
+import { isUndef } from "../utils";
+
 export function patch(oldVnode, vnode) {
     // console.log('patch----')
     // debugger
@@ -198,6 +200,13 @@ function createComponent(vnode) {
 
 }
 export function createElm(vnode) {
+  if (typeof vnode === 'string') {
+      return document.createTextNode(vnode)
+  }
+  if (isUndef(vnode)) {
+      return document.createTextNode('')
+  }
+  debugger
   let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
   if (typeof tag === 'string') { // 元素
       if (createComponent(vnode)) {
@@ -210,6 +219,7 @@ export function createElm(vnode) {
           vnode.el.appendChild(createElm(child))
       });
   } else {
+      debugger
       vnode.el = document.createTextNode(text);
   }
   return vnode.el

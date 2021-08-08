@@ -13,7 +13,7 @@ export function initRender(vm) {
   const renderContext = vm && vm.$parent
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
 
-  vm.$createElement = (a, b, c) => createElement(vm, a, b, c)
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d)
 }
 
 export let currentRenderingInstance = null

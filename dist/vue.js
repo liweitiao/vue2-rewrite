@@ -165,7 +165,7 @@
     return options;
   }
   function isReservedTag(str) {
-    let reservedTag = 'a,div,span,p,img,button,ul,li'; // 源码根据 “，” 生成映射表 {a:true,div:true,p:true}
+    let reservedTag = 'a,div,span,p,img,button,ul,li,h1'; // 源码根据 “，” 生成映射表 {a:true,div:true,p:true}
 
     return reservedTag.includes(str);
   }
@@ -883,6 +883,15 @@
   }
 
   function createElm(vnode) {
+    if (typeof vnode === 'string') {
+      return document.createTextNode(vnode);
+    }
+
+    if (isUndef(vnode)) {
+      return document.createTextNode('');
+    }
+
+    debugger;
     let {
       tag,
       data,
@@ -905,6 +914,7 @@
         vnode.el.appendChild(createElm(child));
       });
     } else {
+      debugger;
       vnode.el = document.createTextNode(text);
     }
 
@@ -1461,6 +1471,11 @@
 
   function createComponent(context, tag, data, key, children, Ctor) {
     debugger;
+
+    if (isUndef(Ctor)) {
+      return createElement(context, tag, data, children);
+    }
+
     const baseCtor = context.$options._base;
 
     if (isObject(Ctor)) {
@@ -1580,7 +1595,7 @@
 
     for (let i = 0, l = children.length; i < l; i++) {
       const child = children[i];
-      const data = child.data; // if (data && data.slot) {
+      const data = child ? child.data : {}; // if (data && data.slot) {
       //   delete data.slot
       // }
 
@@ -1606,7 +1621,7 @@
     vm && vm.$parent;
     vm.$slots = resolveSlots(options._renderChildren);
 
-    vm.$createElement = (a, b, c) => createElement(vm, a, b, c);
+    vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d);
   }
   let currentRenderingInstance = null;
   function renderMixin(Vue) {

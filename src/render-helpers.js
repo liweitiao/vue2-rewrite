@@ -31,7 +31,7 @@ export function resolveSlots(children, context) {
   const slots = {}
   for (let i = 0, l = children.length; i < l; i++) {
     const child = children[i]
-    const data = child.data
+    const data = child ? child.data : {}
     // if (data && data.slot) {
     //   delete data.slot
     // }

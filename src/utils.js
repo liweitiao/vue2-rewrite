@@ -174,7 +174,7 @@ export function mergeOptions(parent, child) {
 }
 
 export function isReservedTag(str) {
-  let reservedTag = 'a,div,span,p,img,button,ul,li';
+  let reservedTag = 'a,div,span,p,img,button,ul,li,h1';
   // 源码根据 “，” 生成映射表 {a:true,div:true,p:true}
   return reservedTag.includes(str);
 }
