@@ -1,11 +1,12 @@
-import {  isObject, isUndef } from "../utils"
+import {  isObject, isUndef, isTrue } from "../utils"
 import VNode from "./vnode";
 import { resolveAsyncComponent, createAsyncPlaceholder } from './helpers/index'
 import { createEmptyVNode } from './vnode'
 import { createElement } from './create-element'
+import { createFunctionalComponent } from "./create-functional-component";
 
 export function createComponent(context, tag, data, key, children, Ctor) {
-  debugger
+  // debugger
   if (isUndef(Ctor)) {
     return createElement(context, tag, data, children)
   }
@@ -19,10 +20,10 @@ export function createComponent(context, tag, data, key, children, Ctor) {
   if (isUndef(Ctor.cid)) {
 
     // console.log('Ctor.cid---', Ctor.toString())
-    debugger
+    // debugger
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
-    debugger
+    // debugger
     if (Ctor === undefined) {
       return createAsyncPlaceholder(
         asyncFactory,
@@ -34,9 +35,12 @@ export function createComponent(context, tag, data, key, children, Ctor) {
     }
   }
 
+  if (isTrue(Ctor.options.functional)) {
+    debugger
+    return createFunctionalComponent(Ctor, data, context, children)
+  }
 
-
-  debugger
+  // debugger
   // data.hook = {
   //   init(vnode) {
   //     console.log('init----vnode---', vnode)

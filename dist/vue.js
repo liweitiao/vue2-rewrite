@@ -24,6 +24,9 @@
     return isDef(val) && typeof val.then === 'function' && typeof val.catch === 'function';
   }
   const noop = () => {};
+  function isTrue(v) {
+    return v === true;
+  }
   function toArray(list) {
     let i = list.length;
     const ret = new Array(i);
@@ -669,7 +672,8 @@
 
   function patch(oldVnode, vnode) {
     // console.log('patch----')
-    // debugger
+    debugger;
+
     if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
@@ -864,6 +868,8 @@
           el.style[styleName] = newProps.style[styleName];
         }
       } else {
+        debugger;
+        if (typeof newProps[key] === 'string') continue;
         el.setAttribute(key, newProps[key]);
       }
     }
@@ -889,9 +895,9 @@
 
     if (isUndef(vnode)) {
       return document.createTextNode('');
-    }
+    } //   debugger
 
-    debugger;
+
     let {
       tag,
       data,
@@ -914,7 +920,7 @@
         vnode.el.appendChild(createElm(child));
       });
     } else {
-      debugger;
+      //   debugger
       vnode.el = document.createTextNode(text);
     }
 
@@ -940,7 +946,7 @@
     Vue.prototype.$nextTick = nextTick;
 
     Vue.prototype.$forceUpdate = function () {
-      debugger;
+      // debugger
       const vm = this;
 
       if (vm._watcher) {
@@ -1413,7 +1419,7 @@
     return node;
   }
   function resolveAsyncComponent(factory, baseCtor) {
-    debugger;
+    // debugger
     console.log('resolveAsyncComponent--factory--baseCtor---', factory, baseCtor);
 
     if (isDef(factory.resolved)) {
@@ -1423,8 +1429,8 @@
     var owner = currentRenderingInstance;
 
     if (owner && !isDef(factory.owners)) {
-      console.log('resolveAsyncComponent----owner---');
-      debugger;
+      console.log('resolveAsyncComponent----owner---'); // debugger
+
       const owners = factory.owners = [owner];
       let sync = true;
 
@@ -1439,8 +1445,8 @@
       };
 
       const resolve = once(res => {
-        console.log('res----', res);
-        debugger;
+        console.log('res----', res); // debugger
+
         factory.resolved = ensureCtor(res, baseCtor);
 
         if (!sync) {
@@ -1451,10 +1457,9 @@
       });
       const reject = once(reason => {
         process.env.NODE_ENV !== 'production' && warn(`Failed to resolve async component: ${String(factory)}` + (reason ? `\nReason: ${reason}` : ''));
-      });
-      debugger;
-      const res = factory(resolve, reject);
-      debugger;
+      }); // debugger
+
+      const res = factory(resolve, reject); // debugger
 
       if (isObject(res)) {
         if (isPromise(res)) {
@@ -1469,9 +1474,41 @@
     }
   }
 
-  function createComponent(context, tag, data, key, children, Ctor) {
+  function FunctionalRenderContext(data, children, parent, Ctor) {
+    debugger;
+    Ctor.options;
+    let contextVm;
+
+    if (hasOwn(parent, '_uid')) {
+      contextVm = Object.create(parent);
+      contextVm._original = parent;
+    } else {
+      contextVm = parent;
+      parent = parent._original;
+    }
+
+    this.data = data;
+    this.children = children;
+    this.parent = parent;
+
+    this._c = (a, b, c, d) => createElement(contextVm, a, b, c, d);
+  }
+
+  function createFunctionalComponent(Ctor, data, contextVm, children) {
+    debugger;
+    const options = Ctor.options;
+    const renderContext = new FunctionalRenderContext(data, children, contextVm, Ctor);
+    debugger;
+    const vnode = options.render.call(null, renderContext._c, renderContext);
     debugger;
 
+    if (vnode instanceof VNode) {
+      return vnode;
+    }
+  }
+
+  function createComponent(context, tag, data, key, children, Ctor) {
+    // debugger
     if (isUndef(Ctor)) {
       return createElement(context, tag, data, children);
     }
@@ -1486,23 +1523,27 @@
 
     if (isUndef(Ctor.cid)) {
       // console.log('Ctor.cid---', Ctor.toString())
-      debugger;
+      // debugger
       asyncFactory = Ctor;
-      Ctor = resolveAsyncComponent(asyncFactory, baseCtor);
-      debugger;
+      Ctor = resolveAsyncComponent(asyncFactory, baseCtor); // debugger
 
       if (Ctor === undefined) {
         return createAsyncPlaceholder(asyncFactory, data, context, children, tag);
       }
     }
 
-    debugger; // data.hook = {
+    if (isTrue(Ctor.options.functional)) {
+      debugger;
+      return createFunctionalComponent(Ctor, data, context, children);
+    } // debugger
+    // data.hook = {
     //   init(vnode) {
     //     console.log('init----vnode---', vnode)
     //     let child = vnode.componentInstance = new Ctor({_isComponent: true, parent: context, _parentVnode: vnode})
     //     child.$mount()
     //   }
     // }
+
 
     installComponentHooks(data);
     console.log('createComponent---data---', data);
@@ -1635,8 +1676,8 @@
         _parentVnode
       } = vm.$options;
       vm.$vnode = _parentVnode;
-      console.log('render---', render.toString());
-      debugger;
+      console.log('render---', render.toString()); // debugger
+
       currentRenderingInstance = vm;
       let vnode = render.call(vm._renderProxy, vm.$createElement);
       vnode.parent = _parentVnode;

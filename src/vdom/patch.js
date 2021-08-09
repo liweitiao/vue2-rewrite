@@ -2,7 +2,7 @@ import { isUndef } from "../utils";
 
 export function patch(oldVnode, vnode) {
     // console.log('patch----')
-    // debugger
+    debugger
   if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
   }
@@ -184,6 +184,8 @@ function patchProps(vnode, oldProps = {}) { // 初次渲染时可以调用此方
               el.style[styleName] = newProps.style[styleName];
           }
       } else {
+          debugger
+          if (typeof newProps[key] === 'string') continue
           el.setAttribute(key, newProps[key]);
       }
   }
@@ -206,7 +208,7 @@ export function createElm(vnode) {
   if (isUndef(vnode)) {
       return document.createTextNode('')
   }
-  debugger
+//   debugger
   let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
   if (typeof tag === 'string') { // 元素
       if (createComponent(vnode)) {
@@ -219,7 +221,7 @@ export function createElm(vnode) {
           vnode.el.appendChild(createElm(child))
       });
   } else {
-      debugger
+    //   debugger
       vnode.el = document.createTextNode(text);
   }
   return vnode.el

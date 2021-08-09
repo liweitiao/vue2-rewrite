@@ -30,6 +30,10 @@ export function isPromise (val) {
 
 export const noop = () => {}
 
+export function isTrue(v) {
+  return v === true
+}
+
 export function toArray (list) {
   let i = list.length
   const ret = new Array(i)

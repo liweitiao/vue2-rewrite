@@ -16,7 +16,7 @@ export function createAsyncPlaceholder (factory, data, context, children, tag) {
 
 export function resolveAsyncComponent(factory, baseCtor) {
   
-  debugger
+  // debugger
   console.log('resolveAsyncComponent--factory--baseCtor---', factory, baseCtor)
   
   if (isDef(factory.resolved)) {
@@ -27,7 +27,7 @@ export function resolveAsyncComponent(factory, baseCtor) {
 
   if (owner && !isDef(factory.owners)) {
     console.log('resolveAsyncComponent----owner---')
-    debugger
+    // debugger
     const owners = factory.owners = [owner]
     let sync = true
     let timerLoading = null
@@ -53,7 +53,7 @@ export function resolveAsyncComponent(factory, baseCtor) {
 
     const resolve = once((res) => {
       console.log('res----', res)
-      debugger
+      // debugger
       factory.resolved = ensureCtor(res, baseCtor)
       if (!sync) {
         forceRender(true)
@@ -69,9 +69,9 @@ export function resolveAsyncComponent(factory, baseCtor) {
       )
     })
 
-    debugger
+    // debugger
     const res = factory(resolve, reject)
-    debugger
+    // debugger
 
 
     if(isObject(res)) {

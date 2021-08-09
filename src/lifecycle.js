@@ -19,7 +19,7 @@ export function lifecycleMixin(Vue) {
   Vue.prototype.$nextTick = nextTick
 
   Vue.prototype.$forceUpdate = function () {
-    debugger
+    // debugger
     const vm = this
     if (vm._watcher) {
       vm._watcher.update()
