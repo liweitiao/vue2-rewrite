@@ -5,7 +5,7 @@ import { createElement } from "./create-element";
 
 function FunctionalRenderContext(data, children, parent, Ctor) {
 
-  debugger
+  // debugger
   const options = Ctor.options
   let contextVm
   if (hasOwn(parent, '_uid')) {
@@ -23,13 +23,13 @@ function FunctionalRenderContext(data, children, parent, Ctor) {
 }
 
 export function createFunctionalComponent(Ctor, data, contextVm, children) {
-  debugger
+  // debugger
   const options = Ctor.options
 
   const renderContext = new FunctionalRenderContext(data, children, contextVm, Ctor)
-  debugger
+  // debugger
   const vnode = options.render.call(null, renderContext._c, renderContext)
-  debugger
+  // debugger
   if (vnode instanceof VNode) {
     return vnode
   }

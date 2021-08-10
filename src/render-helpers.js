@@ -1,5 +1,6 @@
 // import { createElement, createTextElement } from "./vdom/index"
 import { createElement, createTextElement } from './vdom/create-element'
+import { createEmptyVNode } from './vdom/vnode';
 
 export function installRenderHelpers (target) {
   target._c = function() {
@@ -20,6 +21,10 @@ export function installRenderHelpers (target) {
     // debugger
     nodes = this.$slots[name]
     return nodes
+  }
+
+  target._e = function(name) {
+    return createEmptyVNode(name)
   }
 }
 

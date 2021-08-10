@@ -14,6 +14,10 @@ function genProps(attrs) { // [{name:'xxx',value:'xxx'},{name:'xxx',value:'xxx'}
             })
             attr.value = styleObj
         }
+        if (attr.name === 'v-if') {
+            console.log('codegen---genProps----attr.name---', attr.name)
+            continue
+        }
         str += `${attr.name}:${JSON.stringify(attr.value)},`;
     }
     return `{${str.slice(0,-1)}}`
@@ -77,6 +81,10 @@ function genSlot(el) {
     return res
 }
 
+function genIf(el) {
+    return `(${el.attrsMap['v-if']})?_c('${el.tag}',${genProps(el.attrs)},${genChildren(el)}):_e()`
+}
+
 export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     const code = el ? genElement(el) : '_c("div")'
@@ -89,7 +97,14 @@ export function genElement(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world
     if (!el.plain) {
         data = genData(el)
     }
-    if (el.tag === 'slot') {
+    for (let i = 0; i < el.attrs.length; i++) {
+        el.attrsMap[el.attrs[i]['name']] = el.attrs[i]['value']
+    }
+    // debugger
+    if (el.attrsMap['v-if']) {
+        // debugger
+        return genIf(el)
+    } else if (el.tag === 'slot') {
         return genSlot(el)
     } else {
         let children = genChildren(el);
@@ -102,7 +117,4 @@ export function genElement(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world
 
         return code;
     }
-
-    
-    
 }

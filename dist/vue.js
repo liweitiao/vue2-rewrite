@@ -672,8 +672,7 @@
 
   function patch(oldVnode, vnode) {
     // console.log('patch----')
-    debugger;
-
+    // debugger
     if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
     }
@@ -868,7 +867,7 @@
           el.style[styleName] = newProps.style[styleName];
         }
       } else {
-        debugger;
+        //   debugger
         if (typeof newProps[key] === 'string') continue;
         el.setAttribute(key, newProps[key]);
       }
@@ -1023,6 +1022,11 @@
         attr.value = styleObj;
       }
 
+      if (attr.name === 'v-if') {
+        console.log('codegen---genProps----attr.name---', attr.name);
+        continue;
+      }
+
       str += `${attr.name}:${JSON.stringify(attr.value)},`;
     }
 
@@ -1098,6 +1102,10 @@
     return res;
   }
 
+  function genIf(el) {
+    return `(${el.attrsMap['v-if']})?_c('${el.tag}',${genProps(el.attrs)},${genChildren(el)}):_e()`;
+  }
+
   function generate(el) {
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
@@ -1110,7 +1118,15 @@
       genData(el);
     }
 
-    if (el.tag === 'slot') {
+    for (let i = 0; i < el.attrs.length; i++) {
+      el.attrsMap[el.attrs[i]['name']] = el.attrs[i]['value'];
+    } // debugger
+
+
+    if (el.attrsMap['v-if']) {
+      // debugger
+      return genIf(el);
+    } else if (el.tag === 'slot') {
       return genSlot(el);
     } else {
       let children = genChildren(el); // debugger
@@ -1123,6 +1139,7 @@
   const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`; // 标签名 
 
   const qnameCapture = `((?:${ncname}\\:)?${ncname})`; //  用来获取的标签名的 match后的索引为1的
+  // console.log('<aa:bbb>'.match(new RegExp(qnameCapture)))
 
   const startTagOpen = new RegExp(`^<${qnameCapture}`); // 匹配开始标签的 
 
@@ -1139,7 +1156,7 @@
     }
 
     function parseStartTag() {
-      const start = html.match(startTagOpen);
+      const start = html.match(startTagOpen); // debugger
 
       if (start) {
         const match = {
@@ -1152,6 +1169,7 @@
         let attr;
 
         while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+          // debugger  
           match.attrs.push({
             name: attr[1],
             value: attr[3] || attr[4] || attr[5]
@@ -1183,6 +1201,7 @@
         const endTagMatch = html.match(endTag);
 
         if (endTagMatch) {
+          // debugger
           options.end(endTagMatch[1]);
           advance(endTagMatch[0].length);
           continue;
@@ -1320,10 +1339,11 @@
   }
 
   function compileToFunction(template) {
-    let root = parse(template); // 生成代码 
+    let root = parse(template);
+    console.log('compiler----root----', root); // 生成代码 
 
     let code = generate(root);
-    console.log('compileToFunction----code---', code);
+    console.log('compiler----code---', code);
     let render = new Function(`with(this){return ${code}}`); // code 中会用到数据 数据在vm上
 
     console.log('compiler----render----', render);
@@ -1396,7 +1416,7 @@
     }
 
   }
-  const createEmptyVNode = text => {
+  const createEmptyVNode = (text = '') => {
     const node = new VNode();
     node.text = text;
     node.isComment = true;
@@ -1475,7 +1495,7 @@
   }
 
   function FunctionalRenderContext(data, children, parent, Ctor) {
-    debugger;
+    // debugger
     Ctor.options;
     let contextVm;
 
@@ -1495,12 +1515,11 @@
   }
 
   function createFunctionalComponent(Ctor, data, contextVm, children) {
-    debugger;
+    // debugger
     const options = Ctor.options;
-    const renderContext = new FunctionalRenderContext(data, children, contextVm, Ctor);
-    debugger;
-    const vnode = options.render.call(null, renderContext._c, renderContext);
-    debugger;
+    const renderContext = new FunctionalRenderContext(data, children, contextVm, Ctor); // debugger
+
+    const vnode = options.render.call(null, renderContext._c, renderContext); // debugger
 
     if (vnode instanceof VNode) {
       return vnode;
@@ -1533,7 +1552,7 @@
     }
 
     if (isTrue(Ctor.options.functional)) {
-      debugger;
+      // debugger
       return createFunctionalComponent(Ctor, data, context, children);
     } // debugger
     // data.hook = {
@@ -1624,6 +1643,10 @@
 
       nodes = this.$slots[name];
       return nodes;
+    };
+
+    target._e = function (name) {
+      return createEmptyVNode(name);
     };
   }
   function resolveSlots(children, context) {

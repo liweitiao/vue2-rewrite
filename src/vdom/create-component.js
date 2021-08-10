@@ -36,7 +36,7 @@ export function createComponent(context, tag, data, key, children, Ctor) {
   }
 
   if (isTrue(Ctor.options.functional)) {
-    debugger
+    // debugger
     return createFunctionalComponent(Ctor, data, context, children)
   }
 

@@ -1,6 +1,9 @@
 
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`; // 标签名 
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`; //  用来获取的标签名的 match后的索引为1的
+
+// console.log('<aa:bbb>'.match(new RegExp(qnameCapture)))
+
 const startTagOpen = new RegExp(`^<${qnameCapture}`); // 匹配开始标签的 
 const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`); // 匹配闭合标签的
 //           aa  =   "  xxx "  | '  xxxx '  | xxx
@@ -16,6 +19,7 @@ export function parseHTML(html, options) {
 
   function parseStartTag() {
       const start = html.match(startTagOpen);
+      // debugger
       if (start) {
           const match = {
               tagName: start[1],
@@ -27,7 +31,8 @@ export function parseHTML(html, options) {
           let attr;
 
           while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
-              match.attrs.push({ name: attr[1], value: attr[3] || attr[4] || attr[5] })
+            // debugger  
+            match.attrs.push({ name: attr[1], value: attr[3] || attr[4] || attr[5] })
               advance(attr[0].length)
           }
           if (end) {
@@ -49,6 +54,7 @@ export function parseHTML(html, options) {
       }
       const endTagMatch = html.match(endTag);
       if (endTagMatch) {
+        // debugger
         options.end(endTagMatch[1]);
           advance(endTagMatch[0].length);
           continue;

@@ -2,7 +2,7 @@ import { isUndef } from "../utils";
 
 export function patch(oldVnode, vnode) {
     // console.log('patch----')
-    debugger
+    // debugger
   if (!oldVnode) {
       return createElm(vnode); // 如果没有el元素，那就直接根据虚拟节点返回真实节点
   }
@@ -184,7 +184,7 @@ function patchProps(vnode, oldProps = {}) { // 初次渲染时可以调用此方
               el.style[styleName] = newProps.style[styleName];
           }
       } else {
-          debugger
+        //   debugger
           if (typeof newProps[key] === 'string') continue
           el.setAttribute(key, newProps[key]);
       }

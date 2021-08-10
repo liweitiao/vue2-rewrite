@@ -1,60 +1,39 @@
-let lifeCycleHooks = [
-  'beforeCreate',
-  'created',
-  'beforeMount',
-  'mounted',
-  'beforeUpdate',
-  'updated',
-  'beforeDestroy',
-  'destroyed',
-]
-let strats = {}
-
-function mergeHook(parentVal, childVal) {
-  if (childVal) {
-    if (parentVal) {
-      return parentVal.concat(childVal)
-    } else {
-      return [childVal]
-    }
-  } else {
-    return parentVal
-  }
-}
-
-lifeCycleHooks.forEach(hook => {
-  strats[hook] = mergeHook
-})
-
-function mergeOptions(parent, child) {
-  const options = {}
-  for (let key in parent) {
-    mergeField(key)
-  }
-  for (let key in child) {
-    if (parent.hasOwnProperty(key)) {
-      continue
-    }
-    mergeField(key)
-  }
-
-  function mergeField(key) {
-    let parentVal = parent[key]
-    let childVal = child[key]
-    if (strats[key]) {
-      options[key] = strats[key](parentVal, childVal)
-    } else {
-      if (isObject(parentVal) && isObject(childVal)) {
-        options[key] = { ...parentVal, ...childVal }
-      } else {
-        options[key] = child[key] || parent[key]
-      }
-    }
-  }
-  return options
-}
-
-
-let opts = mergeOptions({beforeCreate: [() => {console.log(11)},() => {console.log(33)}]}, {beforeCreate: [() => {console.log(22)}]})
-console.log(opts)
-opts.beforeCreate.forEach(fn => fn())
+const htmlparser2 = require("htmlparser2");
+const parser = new htmlparser2.Parser({
+    onopentag(name, attributes) {
+        /*
+         * This fires when a new tag is opened.
+         *
+         * If you don't need an aggregated `attributes` object,
+         * have a look at the `onopentagname` and `onattribute` events.
+         */
+        if (name === "script" && attributes.type === "text/javascript") {
+            console.log("JS! Hooray!");
+        }
+    },
+    ontext(text) {
+        /*
+         * Fires whenever a section of text was processed.
+         *
+         * Note that this can fire at any point within text and you might
+         * have to stich together multiple pieces.
+         */
+        console.log("-->", text);
+    },
+    onclosetag(tagname) {
+        /*
+         * Fires when a tag is closed.
+         *
+         * You can rely on this event only firing when you have received an
+         * equivalent opening tag before. Closing tags without corresponding
+         * opening tags will be ignored.
+         */
+        if (tagname === "script") {
+            console.log("That's it?!");
+        }
+    },
+});
+parser.write(
+    "Xyz <script type='text/javascript'>const foo = '<<bar>>';</ script>"
+);
+parser.end();

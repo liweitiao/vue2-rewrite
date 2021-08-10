@@ -17,10 +17,10 @@
 <body>
     <!-- <div id="app">{{fullName}}</div> -->
     <div id="app">
-        <functional>1231</functional>
+        <button v-if="show" style="background: green">标题</button>
+        <div a=2 c='str' style="background: red">内容</div>
     </div>
-    <!-- <button>标题</button>
-    <div>内容</div> -->
+    <!-- <functional>1231</functional> -->
         
     <!-- <script src="node_modules/vue/dist/vue.js"></script> -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
@@ -30,7 +30,7 @@
     <script src="dist/vue.js"></script>
     <!-- <script src="./Vue.js"></script> -->
     <script>
-      debugger
+    //   debugger
         Vue.component('functional',{ // 构造函数产生虚拟节点的
             functional:true, // 函数式组件 // data={attrs:{}}
           
@@ -42,7 +42,12 @@
     //     template: '<button>hello word</button>'
     // })
         const vm = new Vue({
-            el: '#app'
+            el: '#app',
+            data() {
+                return {
+                    show: false
+                }
+            }
         })
     </script>
 
