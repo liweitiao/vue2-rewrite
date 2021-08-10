@@ -897,30 +897,70 @@
     } //   debugger
 
 
-    let {
-      tag,
-      data,
-      children,
-      text,
-      context
-    } = Array.isArray(vnode) ? vnode[0] : vnode;
+    if (Array.isArray(vnode)) {
+      vnode.forEach(item => {
+        let {
+          tag,
+          data,
+          children,
+          text,
+          context
+        } = Array.isArray(item) ? item[0] : item;
 
-    if (typeof tag === 'string') {
-      // 元素
-      if (createComponent$1(vnode)) {
-        // 返回组件对应的真实节点
-        return vnode.componentInstance.$el;
-      }
+        if (typeof tag === 'string') {
+          // 元素
+          if (createComponent$1(vnode)) {
+            // 返回组件对应的真实节点
+            return vnode.componentInstance.$el;
+          }
 
-      vnode.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
+          item.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
 
-      patchProps(vnode);
-      children.forEach(child => {
-        vnode.el.appendChild(createElm(child));
+          patchProps(item);
+          children.forEach(child => {
+            // console.log('createElm-----Array--child---', child)
+            let e = createElm(child); // console.log('createElm----Array---e---', e)
+
+            item.el.appendChild(e);
+          });
+        } else {
+          //   debugger
+          vnode.el = document.createTextNode(text);
+        }
       });
+      return vnode;
     } else {
-      //   debugger
-      vnode.el = document.createTextNode(text);
+      //   let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
+      let {
+        tag,
+        data,
+        children,
+        text,
+        context
+      } = vnode;
+
+      if (typeof tag === 'string') {
+        // 元素
+        if (createComponent$1(vnode)) {
+          // 返回组件对应的真实节点
+          return vnode.componentInstance.$el;
+        }
+
+        vnode.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
+
+        patchProps(vnode);
+        children.forEach(child => {
+          // console.log('createElm-----noArray--child---', child)
+          let e = createElm(child); // console.log('createElm-----noArray---e---', e)
+
+          e.forEach(i => {
+            vnode.el.appendChild(i.el);
+          });
+        });
+      } else {
+        //   debugger
+        vnode.el = document.createTextNode(text);
+      }
     }
 
     return vnode.el;
@@ -1106,6 +1146,15 @@
     return `(${el.attrsMap['v-if']})?_c('${el.tag}',${genProps(el.attrs)},${genChildren(el)}):_e()`;
   }
 
+  function genFor(el) {
+    // debugger
+    // console.log('genFor---el----', el)
+    let arr = el.attrsMap['v-for'].split(' ');
+    let exp = arr[2];
+    let alias = arr[0];
+    return `_l((${exp}),function(${alias}){return _c('div',{},_v(_s(a)))})`;
+  }
+
   function generate(el) {
     //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
@@ -1123,7 +1172,9 @@
     } // debugger
 
 
-    if (el.attrsMap['v-if']) {
+    if (el.attrsMap['v-for']) {
+      return genFor(el);
+    } else if (el.attrsMap['v-if']) {
       // debugger
       return genIf(el);
     } else if (el.tag === 'slot') {
@@ -1647,6 +1698,21 @@
 
     target._e = function (name) {
       return createEmptyVNode(name);
+    };
+
+    target._l = function (val, render) {
+      // debugger
+      let ret, i, l;
+
+      if (Array.isArray(val) || typeof val === 'string') {
+        ret = new Array(val.length);
+
+        for (i = 0, l = val.length; i < l; i++) {
+          ret[i] = render(val[i], i);
+        }
+      }
+
+      return ret;
     };
   }
   function resolveSlots(children, context) {

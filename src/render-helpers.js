@@ -26,6 +26,19 @@ export function installRenderHelpers (target) {
   target._e = function(name) {
     return createEmptyVNode(name)
   }
+
+  target._l = function(val, render) {
+    // debugger
+    let ret, i, l, keys, key
+    if (Array.isArray(val) || typeof val === 'string') {
+      ret = new Array(val.length)
+      for (i = 0, l = val.length; i < l; i++) {
+        ret[i] = render(val[i], i)
+      }
+    }
+
+    return ret
+  }
 }
 
 export function resolveSlots(children, context) {

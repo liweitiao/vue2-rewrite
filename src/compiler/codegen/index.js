@@ -85,6 +85,15 @@ function genIf(el) {
     return `(${el.attrsMap['v-if']})?_c('${el.tag}',${genProps(el.attrs)},${genChildren(el)}):_e()`
 }
 
+function genFor(el) {
+    // debugger
+    // console.log('genFor---el----', el)
+    let arr = el.attrsMap['v-for'].split(' ')
+    let exp = arr[2]
+    let alias = arr[0]
+    return `_l((${exp}),function(${alias}){return _c('div',{},_v(_s(a)))})`
+}
+
 export function generate(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world'),_v())
     // 遍历树 将树拼接成字符串
     const code = el ? genElement(el) : '_c("div")'
@@ -101,7 +110,9 @@ export function genElement(el) { //  _c('div',{id:'app',a:1},_c('span',{},'world
         el.attrsMap[el.attrs[i]['name']] = el.attrs[i]['value']
     }
     // debugger
-    if (el.attrsMap['v-if']) {
+    if (el.attrsMap['v-for']) {
+        return genFor(el)
+    } else if (el.attrsMap['v-if']) {
         // debugger
         return genIf(el)
     } else if (el.tag === 'slot') {

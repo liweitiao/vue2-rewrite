@@ -17,8 +17,7 @@
 <body>
     <!-- <div id="app">{{fullName}}</div> -->
     <div id="app">
-        <button v-if="show" style="background: green">标题</button>
-        <div a=2 c='str' style="background: red">内容</div>
+        <div v-for="a in arr">{{a}}</div>
     </div>
     <!-- <functional>1231</functional> -->
         
@@ -45,7 +44,7 @@
             el: '#app',
             data() {
                 return {
-                    show: false
+                    arr: [1, 2, 3, 4]
                 }
             }
         })

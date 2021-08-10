@@ -201,6 +201,8 @@ function createComponent(vnode) {
   }
 
 }
+
+
 export function createElm(vnode) {
   if (typeof vnode === 'string') {
       return document.createTextNode(vnode)
@@ -209,20 +211,52 @@ export function createElm(vnode) {
       return document.createTextNode('')
   }
 //   debugger
-  let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
-  if (typeof tag === 'string') { // 元素
-      if (createComponent(vnode)) {
-          // 返回组件对应的真实节点
-          return vnode.componentInstance.$el;
-      }
-      vnode.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
-      patchProps(vnode);
-      children.forEach(child => {
-          vnode.el.appendChild(createElm(child))
-      });
+  if (Array.isArray(vnode)) {
+      vnode.forEach(item => {
+          let { tag, data, children, text, context } = Array.isArray(item) ? item[0] : item;
+          if (typeof tag === 'string') { // 元素
+            if (createComponent(vnode)) {
+                // 返回组件对应的真实节点
+                return vnode.componentInstance.$el;
+            }
+            item.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
+            patchProps(item);
+            children.forEach(child => {
+                // console.log('createElm-----Array--child---', child)
+                let e = createElm(child)
+                // console.log('createElm----Array---e---', e)
+
+                item.el.appendChild(e)
+            });
+        } else {
+          //   debugger
+            vnode.el = document.createTextNode(text);
+        }
+    });
+    return vnode
   } else {
-    //   debugger
-      vnode.el = document.createTextNode(text);
+    //   let { tag, data, children, text, context } = Array.isArray(vnode) ? vnode[0] : vnode
+    let { tag, data, children, text, context } = vnode
+    if (typeof tag === 'string') { // 元素
+        if (createComponent(vnode)) {
+            // 返回组件对应的真实节点
+            return vnode.componentInstance.$el;
+        }
+        vnode.el = document.createElement(tag); // 虚拟节点会有一个el属性 对应真实节点
+        patchProps(vnode);
+        children.forEach(child => {
+            // console.log('createElm-----noArray--child---', child)
+            let e = createElm(child)
+                // console.log('createElm-----noArray---e---', e)
+            e.forEach(i => {
+                vnode.el.appendChild(i.el)
+            })
+        });
+    } else {
+      //   debugger
+        vnode.el = document.createTextNode(text);
+    }
   }
+
   return vnode.el
 }
