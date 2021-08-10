@@ -26,7 +26,7 @@ export function renderMixin(Vue) {
     const vm = this
     const { render, _parentVnode } = vm.$options
     vm.$vnode = _parentVnode
-    console.log('render---', render.toString())
+    // console.log('render---', render.toString())
     // debugger
     currentRenderingInstance = vm
     let vnode = render.call(vm._renderProxy, vm.$createElement)

@@ -1019,9 +1019,9 @@
   }
   function mountComponent(vm, el) {
     let updateComponent = () => {
-      let vnode = vm._render();
+      let vnode = vm._render(); // console.log('lifecycle----mountComponent----vnode----', vnode)
+      // debugger
 
-      console.log('lifecycle----mountComponent----vnode----', vnode); // debugger
 
       vm._update(vnode);
     };
@@ -1390,14 +1390,14 @@
   }
 
   function compileToFunction(template) {
-    let root = parse(template);
-    console.log('compiler----root----', root); // 生成代码 
+    let root = parse(template); // console.log('compiler----root----', root)
+    // 生成代码 
 
-    let code = generate(root);
-    console.log('compiler----code---', code);
+    let code = generate(root); // console.log('compiler----code---', code)
+
     let render = new Function(`with(this){return ${code}}`); // code 中会用到数据 数据在vm上
+    // console.log('compiler----render----', render)
 
-    console.log('compiler----render----', render);
     return render; // render(){
     //     return
     // }
@@ -1764,8 +1764,8 @@
         render,
         _parentVnode
       } = vm.$options;
-      vm.$vnode = _parentVnode;
-      console.log('render---', render.toString()); // debugger
+      vm.$vnode = _parentVnode; // console.log('render---', render.toString())
+      // debugger
 
       currentRenderingInstance = vm;
       let vnode = render.call(vm._renderProxy, vm.$createElement);
